@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Send a confirmation email to the user
     await resend.emails.send({
-      from: "O-Fash Markett <hello@ofashmarkett.com>",   // ← change to your verified domain
+      from: "O-Fash Markett <contact@o-fashmarkett.com>", // ← change to your verified domain
       to: email,
       subject: "🎉 You're on the O-Fash Markett Waitlist!",
       html: `
@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
 
     // 2. Notify your team
     await resend.emails.send({
-      from: "O-Fash Markett <hello@ofashmarkett.com>",
-      to: "team@ofashmarkett.com",   // ← your team email
+      from: "O-Fash Markett <contact@o-fashmarkett.com>",
+      to: "team@ofashmarkett.com", // ← your team email
       subject: `🆕 New Waitlist Signup: ${email}`,
       html: `<p>New waitlist signup: <strong>${email}</strong></p>`,
     });
