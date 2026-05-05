@@ -990,7 +990,7 @@ function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
 
 // ─── MODAL CONTENT ────────────────────────────────────────────────────────────
 const MODAL_CONTENT: Record<
-  Exclude<ModalPage, "contact">,
+  Exclude<ModalPage, "contact" | null>,
   { title: string; body: React.ReactNode }
 > = {
   privacy: {
