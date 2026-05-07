@@ -1,162 +1,142 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
 
 type ModalPage = "privacy" | "terms" | "contact" | null;
 type UserRole = "buyer" | "vendor" | "rider" | null;
 
-// ─── UNSPLASH REAL IMAGES ─────────────────────────────────────────────────────
 const IMG = {
-  heroMarket:
-    "https://images.unsplash.com/photo-1596449763009-f62fe48e7ed5?w=1600&q=80&fit=crop",
-  clothesMen:
-    "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=700&q=80&fit=crop",
-  clothesWomen:
-    "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=700&q=80&fit=crop",
-  shoes:
-    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80&fit=crop",
-  wigs: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&q=80&fit=crop",
-  bags: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80&fit=crop",
-  fabric:
-    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80&fit=crop",
-  riderBike:
-    "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800&q=80&fit=crop",
-  riderStreet:
-    "https://images.unsplash.com/photo-1558618047-3df89b4d5bca?w=700&q=80&fit=crop",
-  marketScene:
-    "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&q=80&fit=crop",
-  vendor1:
-    "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=700&q=80&fit=crop",
-  vendor2:
-    "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&q=80&fit=crop",
-  africanMan:
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&q=80&fit=crop&crop=face",
-  africanWoman:
-    "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=500&q=80&fit=crop&crop=face",
-  market2:
-    "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&q=80&fit=crop",
+  heroMarket: "/images/heroMarket.png",
+  clothesMen: "/images/clothesMen.png",
+  clothesWomen: "/images/clothesWomen.png",
+  shoes: "/images/shoes.png",
+  wigs: "/images/wigs.png",
+  bags: "/images/bags.png",
+  fabric: "/images/fabric.png",
+  riderBike: "/images/riderBike.png",
+  marketScene: "/images/marketScene.png",
+  vendor1: "/images/vendor1.png",
+  vendor2: "/images/vendor2.png",
+  market2: "/images/market2.png",
+  africanFashion: "/images/africanFashion.png",
 };
 
-// ─── GLOBAL STYLES (TEAL-DOMINANT PALETTE) ───────────────────────────────────
 function GlobalStyles() {
   return (
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700;800&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,600;9..40,700;9..40,800&display=swap');
       *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
       html{scroll-behavior:smooth;}
-      body{background:#060e0d;overflow-x:hidden;}
-      ::selection{background:rgba(20,184,166,0.32);}
-      ::placeholder{color:rgba(220,250,245,0.28);}
-      ::-webkit-scrollbar{width:5px;}
-      ::-webkit-scrollbar-track{background:#060e0d;}
-      ::-webkit-scrollbar-thumb{background:rgba(20,184,166,0.4);border-radius:3px;}
+      body{background:#050c0b;overflow-x:hidden;}
+      ::selection{background:rgba(20,184,166,0.35);}
+      ::placeholder{color:rgba(220,250,245,0.25);}
+      ::-webkit-scrollbar{width:4px;}
+      ::-webkit-scrollbar-track{background:#050c0b;}
+      ::-webkit-scrollbar-thumb{background:rgba(20,184,166,0.45);border-radius:2px;}
 
       :root{
-        /* Primary teal spectrum */
-        --t0:#042e2a;   /* deepest */
-        --t1:#065f58;   /* deep teal */
-        --t2:#0d9488;   /* brand teal */
-        --t3:#14b8a6;   /* bright teal */
-        --t4:#5eead4;   /* pale teal */
-        --t5:#a7f3d0;   /* mint */
-        /* Accent warm */
-        --rust:#c4430a;
-        --clay:#b87333;
-        --amber:#e8a020;  /* warm accent replacing gold */
-        /* Neutral */
-        --dark:#060e0d;
-        --dark2:#081412;
-        --text:#e8f7f5;
-        --text-d:rgba(220,250,245,0.55);
-        --text-f:rgba(220,250,245,0.32);
-        --border:rgba(20,184,166,0.18);
-        --border-b:rgba(20,184,166,0.10);
+        --t1:#042e2a; --t2:#065f58; --t3:#0d9488; --t4:#14b8a6; --t5:#5eead4; --t6:#a7f3d0;
+        --gold:#f59e0b; --gold-l:#fbbf24; --gold-p:#fde68a;
+        --rust:#c4430a; --clay:#b87333;
+        --dark:#050c0b;
+        --glass:rgba(6,95,88,0.11);
+        --gborder:rgba(20,184,166,0.17);
       }
 
-      @keyframes pulse2{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
-      @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-      @keyframes slideUp{from{opacity:0;transform:translateY(32px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+      @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.65)}}
+      @keyframes fade-in{from{opacity:0}to{opacity:1}}
+      @keyframes slide-up{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:translateY(0)}}
       @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-      @keyframes beamDown{0%{opacity:0;transform:scaleY(0) translateY(-100%)}20%{opacity:1}80%{opacity:1}100%{opacity:0;transform:scaleY(1) translateY(100%)}}
-      @keyframes rotateBorder{to{--angle:360deg}}
-      @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+      @keyframes rotate-border{to{--angle:360deg}}
+      @keyframes beam-fall{0%{opacity:0;transform:scaleY(0) translateY(-110%)}15%{opacity:1}80%{opacity:.8}100%{opacity:0;transform:scaleY(1) translateY(110%)}}
+      @keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-11px)}}
+      @keyframes shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+      @keyframes ride-across{from{transform:translateX(-80px);opacity:0}to{transform:translateX(0);opacity:1}}
 
       @property --angle{syntax:'<angle>';initial-value:0deg;inherits:false;}
-      .mborder{background:conic-gradient(from var(--angle),transparent 70%,var(--t3) 80%,var(--t4) 88%,var(--amber) 94%,transparent 100%);animation:rotateBorder 4s linear infinite;}
 
-      .nav-link:hover{color:var(--t4) !important;}
-      .nav-cta:hover{transform:translateY(-2px) !important;box-shadow:0 8px 32px rgba(20,184,166,0.55) !important;}
-      .role-card:hover{transform:translateY(-8px) !important;border-color:var(--t3) !important;}
-      .role-card.selected{border-color:var(--t3) !important;box-shadow:0 0 0 2px var(--t3),0 20px 60px rgba(20,184,166,0.22) !important;}
-      .step-card:hover{transform:translateY(-5px) !important;border-color:rgba(20,184,166,0.35) !important;}
-      .trust-card:hover{border-color:rgba(20,184,166,0.28) !important;transform:translateY(-3px) !important;}
-      .cat-img:hover{transform:scale(1.04) !important;}
-      .faq-item:hover .faq-q{color:var(--t4) !important;}
-      .footer-link:hover{color:var(--t4) !important;}
-      .social-btn:hover{background:rgba(20,184,166,0.14) !important;border-color:rgba(20,184,166,0.38) !important;}
-      .modal-close:hover{background:rgba(20,184,166,0.14) !important;}
-      .wl-btn:hover{transform:translateY(-2px) !important;box-shadow:0 12px 44px rgba(20,184,166,0.6) !important;}
-      .wl-input:focus{border-color:rgba(20,184,166,0.65) !important;box-shadow:0 0 0 3px rgba(20,184,166,0.12) !important;}
-      .ci:focus{border-color:rgba(20,184,166,0.55) !important;}
+      .mborder-conic{
+        background:conic-gradient(from var(--angle),
+          transparent 60%,var(--t4) 72%,var(--t5) 79%,
+          var(--gold) 86%,var(--gold-l) 91%,transparent 100%);
+        animation:rotate-border 3.4s linear infinite;
+      }
+      .glass{background:var(--glass);backdrop-filter:blur(16px) saturate(155%);-webkit-backdrop-filter:blur(16px) saturate(155%);border:1px solid var(--gborder);}
+      .shimmer-text{background:linear-gradient(90deg,var(--t5) 0%,var(--gold-l) 28%,var(--t5) 48%,var(--t4) 66%,var(--gold) 100%);background-size:220% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 4.2s linear infinite;}
 
-      @media(max-width:900px){
-        .nav-ul{display:none !important;}
-        .roles-g{grid-template-columns:1fr !important;}
-        .hero-cols{flex-direction:column !important;}
-        .rider-cols{flex-direction:column !important;}
-        .footer-g{grid-template-columns:1fr 1fr !important;}
-        .cat-g{grid-template-columns:repeat(2,1fr) !important;}
-        .trust-g{grid-template-columns:repeat(2,1fr) !important;}
-        .steps-g{grid-template-columns:1fr !important;}
+      .nav-link:hover{color:var(--t5)!important;}
+      .nav-cta:hover{transform:translateY(-2px)!important;box-shadow:0 10px 34px rgba(13,148,136,0.52)!important;}
+      .role-card:hover{transform:translateY(-9px)!important;}
+      .role-card.sel{box-shadow:0 0 0 2px var(--t4),0 22px 56px rgba(20,184,166,0.24)!important;}
+      .step-card:hover{transform:translateY(-6px)!important;border-color:rgba(20,184,166,0.38)!important;}
+      .trust-card:hover{transform:translateY(-4px)!important;border-color:rgba(245,158,11,0.28)!important;}
+      .cat-tile:hover{transform:scale(1.05)!important;}
+      .btn-p:hover{transform:translateY(-2px);box-shadow:0 13px 42px rgba(13,148,136,0.52);}
+      .btn-g:hover{transform:translateY(-2px);box-shadow:0 10px 34px rgba(245,158,11,0.42);}
+      .wl-input:focus{border-color:rgba(20,184,166,0.58)!important;box-shadow:0 0 0 3px rgba(20,184,166,0.09)!important;}
+      .wl-btn:hover{transform:translateY(-2px);box-shadow:0 11px 38px rgba(13,148,136,0.55)!important;}
+      .faq-item:hover .faq-q{color:var(--t5)!important;}
+      .footer-link:hover{color:var(--t5)!important;}
+      .social-btn:hover{background:rgba(20,184,166,0.14)!important;border-color:rgba(20,184,166,0.38)!important;}
+      .modal-close:hover{background:rgba(20,184,166,0.14)!important;}
+
+      @media(max-width:960px){
+        .nav-links{display:none!important;}
+        .roles-g,.rider-g{grid-template-columns:1fr!important;}
+        .footer-g{grid-template-columns:1fr 1fr!important;}
+        .cat-g{grid-template-columns:repeat(2,1fr)!important;}
+        .trust-g{grid-template-columns:repeat(2,1fr)!important;}
+        .steps-g{grid-template-columns:1fr!important;}
+        .stats-r{gap:22px!important;}
       }
       @media(max-width:600px){
-        .footer-g{grid-template-columns:1fr !important;}
-        .trust-g{grid-template-columns:1fr !important;}
-        .stats-r{gap:20px !important;}
-        .cr{grid-template-columns:1fr !important;}
-        .cat-g{grid-template-columns:repeat(2,1fr) !important;}
+        .footer-g{grid-template-columns:1fr!important;}
+        .trust-g,.cr2{grid-template-columns:1fr!important;}
+        .wl-pad{padding:32px 22px!important;}
       }
     `}</style>
   );
 }
 
-// ─── LOGO ─────────────────────────────────────────────────────────────────────
+// ── FIX 1: Replace broken /logo.png with a pure SVG/CSS logo ──────────────
 function OFashLogo({
   size = 44,
-  textSize = 19,
+  textSize = 18,
 }: {
   size?: number;
   textSize?: number;
 }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-      {/* Logo image with subtle teal glow ring */}
+    <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+      {/* SVG logo mark — no external image needed */}
       <div
         style={{
           width: size,
           height: size,
           flexShrink: 0,
-          position: "relative",
-          borderRadius: Math.round(size * 0.27),
-          overflow: "hidden",
-          boxShadow: `0 0 0 1.5px rgba(20,184,166,0.35), 0 4px ${Math.round(size * 0.45)}px rgba(13,148,136,0.30)`,
+          borderRadius: Math.round(size * 0.26),
+          background: "linear-gradient(135deg,#042e2a,#0d9488,#14b8a6)",
+          boxShadow: `0 0 0 1.5px rgba(20,184,166,0.38), 0 4px ${Math.round(size * 0.5)}px rgba(13,148,136,0.26)`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <img
-          src="/logo.png"
-          alt="O-Fash Markett logo"
-          width={size}
-          height={size}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            display: "block",
-          }}
-        />
+        <svg
+          width={size * 0.58}
+          height={size * 0.58}
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* Stylised "OF" monogram */}
+          <path d="M4 6h7a3 3 0 010 6H4V6z" fill="rgba(167,243,208,0.95)" />
+          <path d="M4 12h5v6H4v-6z" fill="rgba(167,243,208,0.55)" />
+          <path d="M13 6h7v3h-7V6z" fill="rgba(245,158,11,0.9)" />
+          <path d="M13 10.5h5v3h-5v-3z" fill="rgba(245,158,11,0.65)" />
+        </svg>
       </div>
-
-      {/* Wordmark */}
       <div>
         <div
           style={{
@@ -166,7 +146,7 @@ function OFashLogo({
             background: "linear-gradient(90deg,#a7f3d0,#14b8a6,#0d9488)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
-            letterSpacing: "-0.5px",
+            letterSpacing: "-0.4px",
             lineHeight: 1.1,
           }}
         >
@@ -174,12 +154,12 @@ function OFashLogo({
         </div>
         <div
           style={{
-            fontSize: 9,
-            color: "rgba(220,250,245,0.38)",
-            letterSpacing: "0.15em",
-            textTransform: "uppercase" as const,
+            fontSize: 8.5,
+            color: "rgba(220,250,245,0.36)",
+            letterSpacing: "0.17em",
+            textTransform: "uppercase",
             fontWeight: 700,
-            marginTop: 2,
+            marginTop: 1,
           }}
         >
           Africa&apos;s Fashion Market
@@ -189,7 +169,6 @@ function OFashLogo({
   );
 }
 
-// ─── BACKGROUND BEAMS ─────────────────────────────────────────────────────────
 function BackgroundBeams() {
   return (
     <div
@@ -209,22 +188,22 @@ function BackgroundBeams() {
         preserveAspectRatio="xMidYMid slice"
       >
         <defs>
-          <radialGradient id="bg1" cx="35%" cy="45%" r="55%">
-            <stop offset="0%" stopColor="#0d9488" stopOpacity="0.18" />
+          <radialGradient id="rg1" cx="30%" cy="42%" r="55%">
+            <stop offset="0%" stopColor="#0d9488" stopOpacity=".15" />
             <stop offset="100%" stopColor="transparent" stopOpacity="0" />
           </radialGradient>
-          <radialGradient id="bg2" cx="80%" cy="25%" r="40%">
-            <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.10" />
+          <radialGradient id="rg2" cx="78%" cy="20%" r="42%">
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity=".065" />
             <stop offset="100%" stopColor="transparent" stopOpacity="0" />
           </radialGradient>
-          <radialGradient id="bg3" cx="55%" cy="85%" r="35%">
-            <stop offset="0%" stopColor="#065f58" stopOpacity="0.14" />
+          <radialGradient id="rg3" cx="55%" cy="90%" r="38%">
+            <stop offset="0%" stopColor="#c4430a" stopOpacity=".055" />
             <stop offset="100%" stopColor="transparent" stopOpacity="0" />
           </radialGradient>
-          {[200, 480, 740, 1000, 1260].map((_, i) => (
+          {[160, 420, 700, 960, 1220].map((_, i) => (
             <linearGradient
               key={i}
-              id={`bb${i}`}
+              id={`b${i}`}
               x1="0"
               y1="0"
               x2="0"
@@ -232,23 +211,27 @@ function BackgroundBeams() {
               gradientUnits="userSpaceOnUse"
             >
               <stop offset="0%" stopColor="transparent" />
-              <stop offset="45%" stopColor="#14b8a6" stopOpacity="0.28" />
-              <stop offset="60%" stopColor="#5eead4" stopOpacity="0.16" />
+              <stop
+                offset="40%"
+                stopColor="#14b8a6"
+                stopOpacity={0.2 - i * 0.02}
+              />
+              <stop offset="62%" stopColor="#f59e0b" stopOpacity="0.07" />
               <stop offset="100%" stopColor="transparent" />
             </linearGradient>
           ))}
         </defs>
-        <rect width="100%" height="100%" fill="url(#bg1)" />
-        <rect width="100%" height="100%" fill="url(#bg2)" />
-        <rect width="100%" height="100%" fill="url(#bg3)" />
-        {Array.from({ length: 22 }).map((_, i) => (
+        <rect width="100%" height="100%" fill="url(#rg1)" />
+        <rect width="100%" height="100%" fill="url(#rg2)" />
+        <rect width="100%" height="100%" fill="url(#rg3)" />
+        {Array.from({ length: 26 }).map((_, i) => (
           <line
             key={i}
-            x1={i * 66}
+            x1={i * 56}
             y1="0"
-            x2={i * 66}
+            x2={i * 56}
             y2="960"
-            stroke="rgba(20,184,166,0.04)"
+            stroke="rgba(20,184,166,0.03)"
             strokeWidth="1"
           />
         ))}
@@ -259,20 +242,21 @@ function BackgroundBeams() {
             y1={i * 58}
             x2="1440"
             y2={i * 58}
-            stroke="rgba(94,234,212,0.025)"
+            stroke="rgba(245,158,11,0.018)"
             strokeWidth="1"
           />
         ))}
-        {[200, 480, 740, 1000, 1260].map((x, i) => (
+        {[160, 420, 700, 960, 1220].map((x, i) => (
           <rect
             key={i}
             x={x - 1}
-            y="-200"
+            y="-150"
             width="1.5"
-            height="1400"
-            fill={`url(#bb${i})`}
+            height="1260"
+            fill={`url(#b${i})`}
             style={{
-              animation: `beamDown ${3.5 + i * 0.7}s ease-in-out ${i * 1.2}s infinite`,
+              animation: `beam-fall ${3.2 + i * 0.65}s ease-in-out ${i * 1.1}s infinite`,
+              willChange: "transform,opacity",
             }}
           />
         ))}
@@ -281,40 +265,58 @@ function BackgroundBeams() {
   );
 }
 
-// ─── SPOTLIGHT ────────────────────────────────────────────────────────────────
 function Spotlight() {
-  const [pos, setPos] = useState({ x: 700, y: 300 });
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const h = (e: MouseEvent) => setPos({ x: e.clientX, y: e.clientY });
-    window.addEventListener("mousemove", h, { passive: true });
-    return () => window.removeEventListener("mousemove", h);
+    let id = 0,
+      tx = 700,
+      ty = 300,
+      cx = 700,
+      cy = 300;
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    const tick = () => {
+      cx = lerp(cx, tx, 0.07);
+      cy = lerp(cy, ty, 0.07);
+      if (ref.current)
+        ref.current.style.transform = `translate(${cx - 400}px,${cy - 400}px)`;
+      id = requestAnimationFrame(tick);
+    };
+    const mv = (e: MouseEvent) => {
+      tx = e.clientX;
+      ty = e.clientY;
+    };
+    window.addEventListener("mousemove", mv, { passive: true });
+    id = requestAnimationFrame(tick);
+    return () => {
+      window.removeEventListener("mousemove", mv);
+      cancelAnimationFrame(id);
+    };
   }, []);
   return (
     <div
       style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}
     >
       <div
+        ref={ref}
         style={{
           position: "absolute",
-          width: 700,
-          height: 700,
+          width: 800,
+          height: 800,
           borderRadius: "50%",
           background:
-            "radial-gradient(circle,rgba(20,184,166,0.06) 0%,transparent 70%)",
-          transform: `translate(${pos.x - 350}px,${pos.y - 350}px)`,
-          transition: "transform 0.2s ease",
+            "radial-gradient(circle,rgba(13,148,136,0.05) 0%,rgba(245,158,11,0.018) 50%,transparent 70%)",
+          willChange: "transform",
         }}
       />
     </div>
   );
 }
 
-// ─── MARQUEE ─────────────────────────────────────────────────────────────────
 function Marquee() {
   const items = [
     "🛍 Balogun Market",
     "👗 Ankara Dresses",
-    "👟 Yaba Sneakers",
+    "🛵 Bike Dispatch",
     "💇 Onitsha Wigs",
     "🧵 Aso-oke Fabrics",
     "👒 Aba Shoes",
@@ -326,35 +328,38 @@ function Marquee() {
     "🕶 Dutse Eyewear",
     "👘 Surulere Fashion",
     "🩴 Ibadan Sandals",
+    "🏍 Fast Delivery",
+    "🌍 Pan-Africa Now",
   ];
   const doubled = [...items, ...items];
   return (
     <div
       style={{
         overflow: "hidden",
-        borderTop: "1px solid rgba(20,184,166,0.12)",
-        borderBottom: "1px solid rgba(20,184,166,0.12)",
-        padding: "16px 0",
-        background: "rgba(20,184,166,0.025)",
+        borderTop: "1px solid rgba(20,184,166,0.09)",
+        borderBottom: "1px solid rgba(20,184,166,0.09)",
+        padding: "13px 0",
+        background: "rgba(20,184,166,0.018)",
       }}
     >
       <div
         style={{
           display: "flex",
-          gap: 48,
+          gap: 52,
           width: "max-content",
-          animation: "marquee 42s linear infinite",
+          animation: "marquee 45s linear infinite",
+          willChange: "transform",
         }}
       >
         {doubled.map((item, i) => (
           <span
             key={i}
             style={{
-              fontSize: 13,
+              fontSize: 12.5,
               fontWeight: 700,
-              color: "rgba(220,250,245,0.38)",
+              color: "rgba(220,250,245,0.32)",
               whiteSpace: "nowrap",
-              letterSpacing: "0.06em",
+              letterSpacing: "0.07em",
             }}
           >
             {item}
@@ -365,7 +370,6 @@ function Marquee() {
   );
 }
 
-// ─── MOVING BORDER ────────────────────────────────────────────────────────────
 function MovingBorderCard({
   children,
   r = 24,
@@ -376,14 +380,14 @@ function MovingBorderCard({
   return (
     <div style={{ position: "relative", borderRadius: r, padding: 1.5 }}>
       <div
-        className="mborder"
+        className="mborder-conic"
         style={{ position: "absolute", inset: 0, borderRadius: r }}
       />
       <div
         style={{
           position: "relative",
-          background: "#060e0d",
-          borderRadius: r - 2,
+          background: "linear-gradient(145deg,#071412,#0a1a17)",
+          borderRadius: r - 1.5,
           zIndex: 1,
         }}
       >
@@ -393,27 +397,44 @@ function MovingBorderCard({
   );
 }
 
-// ─── WAITLIST FORM ────────────────────────────────────────────────────────────
 function WaitlistForm({ compact = false }: { compact?: boolean }) {
   const [email, setEmail] = useState("");
   const [wa, setWa] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+  const [role, setRole] = useState<"" | "buyer" | "vendor" | "rider">("");
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [errMsg, setErrMsg] = useState("");
   const [note, setNote] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !email.includes("@")) return;
+    if (!email.includes("@")) {
+      setErrMsg("Please enter a valid email.");
+      return;
+    }
     setStatus("loading");
+    setErrMsg("");
     try {
-      await fetch("/api/waitlist", {
+      const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, whatsapp: wa }),
+        body: JSON.stringify({ email, whatsapp: wa, role }),
       });
-    } catch {}
-    setStatus("success");
-    setEmail("");
-    setWa("");
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setStatus("error");
+        setErrMsg(d.error || "Something went wrong. Please try again.");
+        return;
+      }
+      setStatus("success");
+      setEmail("");
+      setWa("");
+      setRole("");
+    } catch {
+      setStatus("error");
+      setErrMsg("Network error — please check your connection.");
+    }
   };
 
   if (status === "success")
@@ -421,36 +442,106 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
       <div
         style={{
           textAlign: "center",
-          padding: "22px 28px",
-          background: "rgba(13,148,136,0.12)",
-          borderRadius: 16,
-          border: "1px solid rgba(20,184,166,0.35)",
+          padding: "26px 30px",
+          background: "rgba(13,148,136,0.11)",
+          borderRadius: 17,
+          border: "1px solid rgba(20,184,166,0.3)",
+          animation: "slide-up 0.4s ease",
         }}
       >
-        <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
-        <p style={{ color: "#5eead4", fontWeight: 700, fontSize: 16 }}>
+        <div
+          style={{
+            fontSize: 42,
+            marginBottom: 10,
+            animation: "float-y 2s ease-in-out infinite",
+          }}
+        >
+          🎉
+        </div>
+        <p
+          style={{
+            color: "#5eead4",
+            fontWeight: 800,
+            fontSize: 17,
+            marginBottom: 5,
+          }}
+        >
           You&apos;re on the list!
         </p>
         <p
-          style={{ color: "rgba(220,250,245,0.5)", fontSize: 13, marginTop: 6 }}
+          style={{
+            color: "rgba(220,250,245,0.48)",
+            fontSize: 13,
+            lineHeight: 1.72,
+          }}
         >
-          We&apos;ll notify you via email & WhatsApp the moment we launch.
+          Check your inbox — confirmation sent! We&apos;ll notify you the moment
+          we launch.
         </p>
       </div>
     );
+  if (status === "error")
+    return (
+      <div
+        style={{
+          textAlign: "center",
+          padding: "22px 26px",
+          background: "rgba(196,67,10,0.09)",
+          borderRadius: 15,
+          border: "1px solid rgba(196,67,10,0.28)",
+        }}
+      >
+        <div style={{ fontSize: 30, marginBottom: 9 }}>⚠️</div>
+        <p
+          style={{
+            color: "#ea580c",
+            fontWeight: 700,
+            fontSize: 15,
+            marginBottom: 5,
+          }}
+        >
+          Something went wrong
+        </p>
+        <p
+          style={{
+            color: "rgba(220,250,245,0.47)",
+            fontSize: 13,
+            marginBottom: 13,
+          }}
+        >
+          {errMsg}
+        </p>
+        <button
+          onClick={() => setStatus("idle")}
+          style={{
+            padding: "8px 18px",
+            borderRadius: 8,
+            background: "rgba(196,67,10,0.18)",
+            color: "#ea580c",
+            border: "1px solid rgba(196,67,10,0.28)",
+            cursor: "pointer",
+            fontSize: 12.5,
+            fontWeight: 700,
+            fontFamily: "'DM Sans',sans-serif",
+          }}
+        >
+          Try Again
+        </button>
+      </div>
+    );
 
-  const inputSt: React.CSSProperties = {
+  const inSt: React.CSSProperties = {
     flex: 1,
-    minWidth: 190,
-    padding: compact ? "12px 16px" : "14px 18px",
-    borderRadius: 12,
-    border: "1.5px solid rgba(20,184,166,0.22)",
-    background: "rgba(20,184,166,0.06)",
-    color: "#e8f7f5",
-    fontSize: compact ? 13 : 15,
+    minWidth: 175,
+    padding: compact ? "11px 13px" : "13px 16px",
+    borderRadius: 11,
+    border: "1.5px solid rgba(20,184,166,0.19)",
+    background: "rgba(20,184,166,0.05)",
+    color: "#edfaf7",
+    fontSize: compact ? 13 : 14.5,
     outline: "none",
     fontFamily: "'DM Sans',sans-serif",
-    transition: "border-color 0.2s,box-shadow 0.2s",
+    transition: "border-color 0.18s,box-shadow 0.18s",
   };
 
   return (
@@ -464,19 +555,50 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
         maxWidth: 540,
       }}
     >
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {(["buyer", "vendor", "rider"] as const).map((r) => (
+          <button
+            key={r}
+            type="button"
+            onClick={() => setRole(role === r ? "" : r)}
+            style={{
+              padding: "5px 14px",
+              borderRadius: 100,
+              fontSize: 12,
+              fontWeight: 700,
+              fontFamily: "'DM Sans',sans-serif",
+              cursor: "pointer",
+              transition: "all 0.17s",
+              background:
+                role === r ? "rgba(20,184,166,0.18)" : "rgba(20,184,166,0.055)",
+              border:
+                role === r
+                  ? "1.5px solid rgba(20,184,166,0.48)"
+                  : "1.5px solid rgba(20,184,166,0.14)",
+              color: role === r ? "#5eead4" : "rgba(220,250,245,0.42)",
+            }}
+          >
+            {r === "buyer"
+              ? "🛍 Buyer"
+              : r === "vendor"
+                ? "🏪 Vendor"
+                : "🛵 Rider"}
+          </button>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
         <input
           className="wl-input"
-          style={inputSt}
+          style={inSt}
           type="email"
-          placeholder="Email address"
+          placeholder="Email address *"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
         <input
           className="wl-input"
-          style={inputSt}
+          style={inSt}
           type="tel"
           placeholder="WhatsApp number"
           value={wa}
@@ -486,7 +608,7 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
       <div
         style={{
           display: "flex",
-          gap: 10,
+          gap: 9,
           alignItems: "center",
           flexWrap: "wrap",
         }}
@@ -497,17 +619,18 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
           disabled={status === "loading"}
           style={{
             flex: 1,
-            padding: compact ? "12px 20px" : "14px 28px",
+            padding: compact ? "12px 18px" : "14px 26px",
             borderRadius: 12,
             background: "linear-gradient(135deg,#065f58,#0d9488,#14b8a6)",
-            color: "#e8f7f5",
+            color: "#edfaf7",
             fontWeight: 800,
             fontSize: compact ? 14 : 15,
             cursor: "pointer",
             border: "none",
-            boxShadow: "0 6px 32px rgba(20,184,166,0.38)",
+            boxShadow: "0 6px 26px rgba(13,148,136,0.36)",
             fontFamily: "'DM Sans',sans-serif",
             transition: "transform 0.15s,box-shadow 0.2s",
+            willChange: "transform",
           }}
         >
           {status === "loading" ? "Reserving…" : "Reserve a Spot →"}
@@ -517,7 +640,7 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
           onClick={() => setNote((n) => !n)}
           style={{
             fontSize: 12,
-            color: "rgba(220,250,245,0.35)",
+            color: "rgba(220,250,245,0.3)",
             background: "none",
             border: "none",
             cursor: "pointer",
@@ -529,27 +652,40 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
           Why WhatsApp?
         </button>
       </div>
-      {note && (
+      {errMsg && status === "idle" && (
         <p
           style={{
             fontSize: 12,
-            color: "rgba(220,250,245,0.45)",
-            background: "rgba(20,184,166,0.07)",
-            padding: "10px 14px",
+            color: "#ea580c",
+            padding: "8px 11px",
+            borderRadius: 8,
+            background: "rgba(196,67,10,0.07)",
+            border: "1px solid rgba(196,67,10,0.18)",
+          }}
+        >
+          {errMsg}
+        </p>
+      )}
+      {note && (
+        <div
+          style={{
+            fontSize: 12,
+            color: "rgba(220,250,245,0.44)",
+            background: "rgba(20,184,166,0.055)",
+            padding: "10px 13px",
             borderRadius: 10,
-            border: "1px solid rgba(20,184,166,0.15)",
+            border: "1px solid rgba(20,184,166,0.13)",
             lineHeight: 1.7,
           }}
         >
-          📱 <strong style={{ color: "#a7f3d0" }}>We promise:</strong> We will
-          only message you about our launch update. No spam, ever.
-        </p>
+          📱 <strong style={{ color: "#a7f3d0" }}>We promise:</strong> WhatsApp
+          is only for your launch notification. No spam, ever.
+        </div>
       )}
     </form>
   );
 }
 
-// ─── COUNTER ─────────────────────────────────────────────────────────────────
 function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
@@ -557,15 +693,16 @@ function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
     const ob = new IntersectionObserver(
       ([e]) => {
         if (!e.isIntersecting) return;
-        let c = 0;
-        const step = target / 60;
-        const t = setInterval(() => {
-          c += step;
-          if (c >= target) {
-            setCount(target);
-            clearInterval(t);
-          } else setCount(Math.floor(c));
-        }, 16);
+        const dur = 1600,
+          s = performance.now();
+        const tick = (now: number) => {
+          const p = Math.min((now - s) / dur, 1);
+          const ease = 1 - Math.pow(1 - p, 3);
+          setCount(Math.floor(ease * target));
+          if (p < 1) requestAnimationFrame(tick);
+          else setCount(target);
+        };
+        requestAnimationFrame(tick);
         ob.disconnect();
       },
       { threshold: 0.5 },
@@ -581,7 +718,6 @@ function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
   );
 }
 
-// ─── ROLE SELECTOR ────────────────────────────────────────────────────────────
 function RoleSelector() {
   const [sel, setSel] = useState<UserRole>(null);
   const roles = [
@@ -590,10 +726,10 @@ function RoleSelector() {
       icon: "🛍",
       title: "Buyer",
       sub: "Shop from Balogun to Onitsha",
-      desc: "Find clothing, shoes, bags and other fashion items from your local markets instantly. Access multiple vendors across Nigeria — delivered to your door.",
+      desc: "Find clothing, shoes, bags and other fashion items from your local markets instantly. Access multiple vendors across Nigeria delivered to your door.",
       img: IMG.clothesMen,
       accent: "#0d9488",
-      accentRgb: "13,148,136",
+      rgb: "13,148,136",
     },
     {
       id: "vendor" as UserRole,
@@ -602,93 +738,88 @@ function RoleSelector() {
       sub: "Reach more buyers, make more sales",
       desc: "List your fashion items, manage your digital market stall, and reach thousands of buyers nationwide. More sales, zero extra stress.",
       img: IMG.vendor1,
-      accent: "#14b8a6",
-      accentRgb: "20,184,166",
+      accent: "#f59e0b",
+      rgb: "245,158,11",
     },
     {
       id: "rider" as UserRole,
       icon: "🛵",
       title: "Rider",
       sub: "Deliver orders across your city",
-      desc: "Earn flexibly delivering fashion orders in your city. Set your own hours, get paid per delivery, and grow your income on your terms.",
+      desc: "Earn flexibly delivering fashion orders in your city on your bike. Set your own hours, get paid per delivery, and grow your income on your terms.",
       img: IMG.riderBike,
       accent: "#c4430a",
-      accentRgb: "196,67,10",
+      rgb: "196,67,10",
     },
   ];
   return (
     <div>
       <p
         style={{
-          fontSize: 13,
-          fontWeight: 700,
-          letterSpacing: "0.12em",
+          fontSize: 11.5,
+          fontWeight: 800,
+          letterSpacing: "0.14em",
           color: "#14b8a6",
-          textTransform: "uppercase" as const,
-          marginBottom: 20,
+          textTransform: "uppercase",
+          marginBottom: 18,
           textAlign: "center",
         }}
       >
-        How should we address you?
+        I am joining as a…
       </p>
       <div
         className="roles-g"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3,1fr)",
-          gap: 18,
-          maxWidth: 920,
+          gap: 15,
+          maxWidth: 940,
           margin: "0 auto",
         }}
       >
         {roles.map((r) => (
           <div
             key={r.id!}
-            className={`role-card${sel === r.id ? " selected" : ""}`}
-            onClick={() => setSel(r.id)}
+            className={`role-card glass${sel === r.id ? " sel" : ""}`}
+            onClick={() => setSel(sel === r.id ? null : r.id)}
             style={{
-              borderRadius: 22,
-              border: `1.5px solid ${sel === r.id ? r.accent : "rgba(20,184,166,0.13)"}`,
+              borderRadius: 20,
+              overflow: "hidden",
+              cursor: "pointer",
+              border: `1.5px solid ${sel === r.id ? r.accent : "var(--gborder)"}`,
               background:
                 sel === r.id
-                  ? `linear-gradient(145deg,rgba(${r.accentRgb},0.14),rgba(6,14,13,0.6))`
-                  : "rgba(255,255,255,0.015)",
-              cursor: "pointer",
-              overflow: "hidden",
-              transition: "all 0.3s ease",
-              boxShadow:
-                sel === r.id
-                  ? `0 0 0 2px ${r.accent},0 24px 60px rgba(${r.accentRgb},0.18)`
-                  : "none",
+                  ? `linear-gradient(145deg,rgba(${r.rgb},0.15),rgba(5,12,11,0.7))`
+                  : undefined,
+              transition: "all 0.28s cubic-bezier(0.34,1.56,0.64,1)",
+              willChange: "transform",
             }}
           >
+            {/* FIX 2: added sizes prop to all fill Images */}
             <div
-              style={{ height: 160, overflow: "hidden", position: "relative" }}
+              style={{ height: 155, overflow: "hidden", position: "relative" }}
             >
-              <img
+              <Image
                 src={r.img}
                 alt={r.title}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  transition: "transform 0.4s",
-                }}
+                fill
+                sizes="(max-width: 960px) 100vw, 33vw"
+                style={{ objectFit: "cover" }}
               />
               <div
                 style={{
                   position: "absolute",
                   inset: 0,
                   background:
-                    "linear-gradient(to top,rgba(6,14,13,0.92) 0%,rgba(6,14,13,0.1) 60%)",
+                    "linear-gradient(to top,rgba(5,12,11,0.94) 0%,rgba(5,12,11,0.04) 55%)",
                 }}
               />
               <div
                 style={{
                   position: "absolute",
-                  bottom: 12,
-                  left: 14,
-                  fontSize: 30,
+                  bottom: 10,
+                  left: 12,
+                  fontSize: 27,
                 }}
               >
                 {r.icon}
@@ -699,51 +830,52 @@ function RoleSelector() {
                     position: "absolute",
                     top: 10,
                     right: 10,
-                    width: 26,
-                    height: 26,
+                    width: 24,
+                    height: 24,
                     borderRadius: "50%",
                     background: r.accent,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 13,
-                    color: "#060e0d",
+                    fontSize: 12,
+                    color: "#050c0b",
                     fontWeight: 900,
+                    animation: "fade-in 0.2s ease",
                   }}
                 >
                   ✓
                 </div>
               )}
             </div>
-            <div style={{ padding: "16px 18px 22px" }}>
+            <div style={{ padding: "13px 15px 19px" }}>
               <h3
                 style={{
-                  fontSize: 18,
+                  fontSize: 16.5,
                   fontWeight: 900,
                   fontFamily: "'Playfair Display',serif",
-                  marginBottom: 4,
-                  color: sel === r.id ? "#a7f3d0" : "#e8f7f5",
+                  marginBottom: 3,
+                  color: sel === r.id ? "#a7f3d0" : "#edfaf7",
                 }}
               >
                 {r.title}
               </h3>
               <p
                 style={{
-                  fontSize: 11,
+                  fontSize: 10.5,
                   fontWeight: 700,
                   color: "#5eead4",
                   letterSpacing: "0.05em",
-                  marginBottom: 8,
-                  textTransform: "uppercase" as const,
+                  marginBottom: 6,
+                  textTransform: "uppercase",
                 }}
               >
                 {r.sub}
               </p>
               <p
                 style={{
-                  fontSize: 13,
-                  color: "rgba(220,250,245,0.55)",
-                  lineHeight: 1.68,
+                  fontSize: 12.5,
+                  color: "rgba(220,250,245,0.5)",
+                  lineHeight: 1.65,
                 }}
               >
                 {r.desc}
@@ -756,52 +888,51 @@ function RoleSelector() {
         <p
           style={{
             textAlign: "center",
-            marginTop: 18,
-            fontSize: 13.5,
+            marginTop: 14,
+            fontSize: 13,
             color: "#14b8a6",
             fontWeight: 700,
-            animation: "fadeIn 0.3s ease",
+            animation: "fade-in 0.3s ease",
           }}
         >
-          ✓ Great! You selected <strong>{sel}</strong> — join the waitlist below
-          to reserve your spot.
+          ✓ Selected: <strong style={{ color: "#f59e0b" }}>{sel}</strong> —
+          scroll down to reserve your spot.
         </p>
       )}
     </div>
   );
 }
 
-// ─── FAQ ─────────────────────────────────────────────────────────────────────
 function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
   const items = [
     {
       q: "What is O-Fash Markett?",
-      a: "O-Fash Markett is the digital twin of Africa's local fashion markets. Think of it as Balogun, Yaba, Dutse, Onitsha and every other fashion market — accessible on your mobile phone. With one download, you access multiple vendors across several markets, make purchases, and get items delivered to your doorstep in minutes to hours.",
+      a: "O-Fash Markett is the digital twin of Africa's local fashion markets. Think of it as Balogun, Yaba, Dutse, Onitsha and every other fashion market accessible on your mobile phone. One download gives you access to multiple vendors across several markets, with items delivered to your doorstep in minutes to hours.",
     },
     {
       q: "What can I buy or sell on the app?",
-      a: "All fashion items available in local markets — bags, shoes, textiles, clothes, wigs, accessories and more. All genders and age ranges. Vendors register their business and list what they have readily in stock.",
+      a: "All fashion items available in local markets bags, shoes, textiles, clothes, wigs, accessories and more. All genders and age ranges. Vendors register their business and list what they have readily in stock.",
     },
     {
       q: "Is my payment safe?",
-      a: "Absolutely. O-Fash Markett holds your payment until the dispatch rider delivers and you confirm receipt. Vendors are also protected — purchased items must be returned in the same condition they were sent for a full refund. Refunds are processed within 24–48 hours.",
+      a: "Absolutely. O-Fash Markett holds your payment until the dispatch rider delivers and you confirm receipt. Vendors are protected too items must be returned in same condition for a refund. Refunds processed within 24–48 hours.",
     },
     {
       q: "How do I know vendors are verified?",
-      a: "Every vendor on O-Fash Markett passes a strict verification process and onboarding check before they can list products. Only verified vendors appear on the platform — so you can shop with confidence.",
+      a: "Every vendor passes a strict verification and onboarding check before they can list products. Only verified vendors appear on the platform.",
     },
     {
       q: "How long does delivery take?",
-      a: "Delivery happens within 30 minutes to 5 hours, depending on the vendor's location, your proximity to the vendor, and rider availability at that location. We're constantly working to minimise wait times.",
+      a: "30 minutes to 5 hours depending on vendor location, your proximity, and bike rider availability. We're constantly working to minimise wait times.",
     },
     {
       q: "How do I download the app?",
-      a: "Click the 'Join Waitlist' button to be added to our list. You'll be the first to be notified — with a direct download link — the moment we launch.",
+      a: "Join the waitlist now. You'll receive a direct download link the moment we launch.",
     },
     {
-      q: "Where will O-Fash Markett be available?",
-      a: "We are launching soon in Lagos first, then rapidly expanding to other states across Nigeria and Africa. Join the waitlist to be notified about expansion to your city.",
+      q: "Where will O-Fash Markett launch?",
+      a: "Lagos first, then rapidly expanding to other states across Nigeria and Africa. Join to be notified about your city.",
     },
   ];
   return (
@@ -817,37 +948,32 @@ function FAQ() {
       {items.map((item, i) => (
         <div
           key={i}
-          className="faq-item"
-          style={{
-            borderRadius: 14,
-            border: "1px solid rgba(20,184,166,0.12)",
-            background: "rgba(255,255,255,0.014)",
-            overflow: "hidden",
-          }}
+          className="faq-item glass"
+          style={{ borderRadius: 12, overflow: "hidden" }}
         >
           <button
             onClick={() => setOpen(open === i ? null : i)}
             style={{
               width: "100%",
-              padding: "18px 22px",
+              padding: "16px 19px",
               background: "none",
               border: "none",
               cursor: "pointer",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              gap: 16,
+              gap: 14,
               fontFamily: "'DM Sans',sans-serif",
             }}
           >
             <span
               className="faq-q"
               style={{
-                fontSize: 14.5,
+                fontSize: 14,
                 fontWeight: 700,
-                color: "#e8f7f5",
+                color: "#edfaf7",
                 textAlign: "left",
-                transition: "color 0.2s",
+                transition: "color 0.18s",
               }}
             >
               {item.q}
@@ -855,9 +981,9 @@ function FAQ() {
             <span
               style={{
                 fontSize: 20,
-                color: "#14b8a6",
+                color: "#f59e0b",
                 flexShrink: 0,
-                transition: "transform 0.25s",
+                transition: "transform 0.22s",
                 transform: open === i ? "rotate(45deg)" : "rotate(0deg)",
                 lineHeight: 1,
               }}
@@ -867,12 +993,15 @@ function FAQ() {
           </button>
           {open === i && (
             <div
-              style={{ padding: "0 22px 20px", animation: "fadeIn 0.25s ease" }}
+              style={{
+                padding: "0 19px 17px",
+                animation: "slide-up 0.22s ease",
+              }}
             >
               <p
                 style={{
-                  fontSize: 14,
-                  color: "rgba(220,250,245,0.58)",
+                  fontSize: 13.5,
+                  color: "rgba(220,250,245,0.54)",
                   lineHeight: 1.78,
                 }}
               >
@@ -886,7 +1015,6 @@ function FAQ() {
   );
 }
 
-// ─── CONTACT FORM ─────────────────────────────────────────────────────────────
 function ContactForm() {
   const [f, setF] = useState({ name: "", email: "", subject: "", msg: "" });
   const [sent, setSent] = useState(false);
@@ -895,25 +1023,29 @@ function ContactForm() {
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setF((p) => ({ ...p, [k]: e.target.value }));
   const inSt: React.CSSProperties = {
-    padding: "13px 18px",
-    borderRadius: 12,
-    border: "1.5px solid rgba(20,184,166,0.22)",
-    background: "rgba(20,184,166,0.06)",
-    color: "#e8f7f5",
-    fontSize: 15,
+    padding: "12px 16px",
+    borderRadius: 11,
+    border: "1.5px solid rgba(20,184,166,0.19)",
+    background: "rgba(20,184,166,0.05)",
+    color: "#edfaf7",
+    fontSize: 14.5,
     outline: "none",
     fontFamily: "'DM Sans',sans-serif",
-    transition: "border-color 0.2s",
+    transition: "border-color 0.18s",
   };
   if (sent)
     return (
-      <div style={{ textAlign: "center", padding: 32 }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
-        <p style={{ color: "#5eead4", fontWeight: 700, fontSize: 16 }}>
+      <div style={{ textAlign: "center", padding: 30 }}>
+        <div style={{ fontSize: 38, marginBottom: 11 }}>✅</div>
+        <p style={{ color: "#5eead4", fontWeight: 700, fontSize: 15 }}>
           Message sent!
         </p>
         <p
-          style={{ color: "rgba(220,250,245,0.5)", fontSize: 14, marginTop: 8 }}
+          style={{
+            color: "rgba(220,250,245,0.48)",
+            fontSize: 13,
+            marginTop: 7,
+          }}
         >
           We&apos;ll get back to you within 24 hours.
         </p>
@@ -925,14 +1057,14 @@ function ContactForm() {
         e.preventDefault();
         setSent(true);
       }}
-      style={{ display: "flex", flexDirection: "column", gap: 12 }}
+      style={{ display: "flex", flexDirection: "column", gap: 11 }}
     >
       <div
-        className="cr"
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
+        className="cr2"
+        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11 }}
       >
         <input
-          className="ci"
+          className="wl-input"
           style={inSt}
           value={f.name}
           onChange={set("name")}
@@ -940,7 +1072,7 @@ function ContactForm() {
           required
         />
         <input
-          className="ci"
+          className="wl-input"
           style={inSt}
           value={f.email}
           onChange={set("email")}
@@ -950,7 +1082,7 @@ function ContactForm() {
         />
       </div>
       <input
-        className="ci"
+        className="wl-input"
         style={inSt}
         value={f.subject}
         onChange={set("subject")}
@@ -958,8 +1090,8 @@ function ContactForm() {
         required
       />
       <textarea
-        className="ci"
-        style={{ ...inSt, resize: "vertical", minHeight: 120 }}
+        className="wl-input"
+        style={{ ...inSt, resize: "vertical", minHeight: 108 }}
         value={f.msg}
         onChange={set("msg")}
         placeholder="Tell us how we can help, or what features you'd love to see…"
@@ -968,12 +1100,12 @@ function ContactForm() {
       <button
         type="submit"
         style={{
-          padding: "14px",
-          borderRadius: 12,
+          padding: "13px",
+          borderRadius: 11,
           background: "linear-gradient(135deg,#065f58,#0d9488,#14b8a6)",
-          color: "#e8f7f5",
+          color: "#edfaf7",
           fontWeight: 800,
-          fontSize: 15,
+          fontSize: 14.5,
           cursor: "pointer",
           border: "none",
           fontFamily: "'DM Sans',sans-serif",
@@ -981,7 +1113,7 @@ function ContactForm() {
       >
         Send Message →
       </button>
-      <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginTop: 4 }}>
+      <div style={{ display: "flex", gap: 17, flexWrap: "wrap", marginTop: 2 }}>
         {[
           { i: "📧", t: "contact@o-fashmarkett.com" },
           { i: "📍", t: "Lagos, Nigeria 🇳🇬" },
@@ -992,9 +1124,9 @@ function ContactForm() {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 6,
-              fontSize: 12,
-              color: "rgba(220,250,245,0.32)",
+              gap: 5,
+              fontSize: 11.5,
+              color: "rgba(220,250,245,0.28)",
             }}
           >
             <span>{x.i}</span>
@@ -1006,7 +1138,6 @@ function ContactForm() {
   );
 }
 
-// ─── MODAL ───────────────────────────────────────────────────────────────────
 const MODALS: Record<
   "privacy" | "terms",
   { title: string; body: React.ReactNode }
@@ -1015,16 +1146,6 @@ const MODALS: Record<
     title: "Privacy Policy",
     body: (
       <>
-        <p
-          style={{
-            marginBottom: 16,
-            color: "rgba(220,250,245,0.55)",
-            fontSize: 14,
-          }}
-        >
-          Last updated: May 2026. O-Fash Markett is committed to protecting your
-          personal information.
-        </p>
         {[
           {
             h: "1. Information We Collect",
@@ -1048,11 +1169,11 @@ const MODALS: Record<
           },
           {
             h: "6. Your Rights",
-            p: "You have the right to access, correct, or delete your personal data. Contact us at contact@o-fashmarkett.com to exercise your rights.",
+            p: "You have the right to access, correct, or delete your personal data. Contact us at contact@o-fashmarkett.com.",
           },
           {
             h: "7. Security",
-            p: "We implement SSL encryption, secure servers, and regular security audits to protect your information.",
+            p: "We implement SSL encryption, secure servers, and regular security audits.",
           },
           {
             h: "8. Contact",
@@ -1062,19 +1183,19 @@ const MODALS: Record<
           <div key={s.h}>
             <h2
               style={{
-                fontSize: 14.5,
+                fontSize: 14,
                 fontWeight: 800,
                 color: "#5eead4",
-                marginBottom: 6,
-                marginTop: 22,
+                marginBottom: 5,
+                marginTop: 20,
               }}
             >
               {s.h}
             </h2>
             <p
               style={{
-                fontSize: 13.5,
-                color: "rgba(220,250,245,0.58)",
+                fontSize: 13,
+                color: "rgba(220,250,245,0.54)",
                 lineHeight: 1.8,
               }}
             >
@@ -1089,16 +1210,6 @@ const MODALS: Record<
     title: "Terms of Service",
     body: (
       <>
-        <p
-          style={{
-            marginBottom: 16,
-            color: "rgba(220,250,245,0.55)",
-            fontSize: 14,
-          }}
-        >
-          Last updated: May 2026. By using O-Fash Markett, you agree to these
-          Terms.
-        </p>
         {[
           {
             h: "1. Acceptance of Terms",
@@ -1118,15 +1229,15 @@ const MODALS: Record<
           },
           {
             h: "5. Buyer Obligations",
-            p: "Buyers must provide accurate delivery information, make timely payments, and use the platform in good faith. Items can be returned if not delivered as described, in the same condition they were sent.",
+            p: "Buyers must provide accurate delivery information, make timely payments, and use the platform in good faith.",
           },
           {
             h: "6. Rider Obligations",
-            p: "Riders must maintain valid identification, handle items with care, and adhere to our delivery standards. Riders are independent contractors, not employees of O-Fash Markett.",
+            p: "Riders must maintain valid identification, handle items with care, and adhere to our delivery standards. Riders are independent contractors.",
           },
           {
             h: "7. Prohibited Activities",
-            p: "You may not sell counterfeit goods, engage in fraudulent activity, harass other users, or breach applicable Nigerian laws. Violations result in immediate account suspension.",
+            p: "You may not sell counterfeit goods, engage in fraudulent activity, harass other users, or breach Nigerian laws. Violations result in immediate account suspension.",
           },
           {
             h: "8. Governing Law",
@@ -1136,19 +1247,19 @@ const MODALS: Record<
           <div key={s.h}>
             <h2
               style={{
-                fontSize: 14.5,
+                fontSize: 14,
                 fontWeight: 800,
                 color: "#5eead4",
-                marginBottom: 6,
-                marginTop: 22,
+                marginBottom: 5,
+                marginTop: 20,
               }}
             >
               {s.h}
             </h2>
             <p
               style={{
-                fontSize: 13.5,
-                color: "rgba(220,250,245,0.58)",
+                fontSize: 13,
+                color: "rgba(220,250,245,0.54)",
                 lineHeight: 1.8,
               }}
             >
@@ -1175,39 +1286,37 @@ function Modal({ page, onClose }: { page: ModalPage; onClose: () => void }) {
   }, [onClose]);
   if (!page) return null;
   const isContact = page === "contact";
-  const content = isContact ? null : MODALS[page];
+  const content = isContact ? null : MODALS[page as "privacy" | "terms"];
   return (
     <div
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 1000,
-        background: "rgba(6,14,13,0.93)",
-        backdropFilter: "blur(20px)",
+        background: "rgba(5,12,11,0.92)",
+        backdropFilter: "blur(22px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: 24,
-        animation: "fadeIn 0.25s ease",
+        animation: "fade-in 0.2s ease",
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
+        className="glass"
         style={{
-          background: "linear-gradient(145deg,#081a17,#0a1612)",
-          border: "1px solid rgba(20,184,166,0.2)",
-          borderRadius: 28,
+          borderRadius: 23,
           width: "100%",
-          maxWidth: 700,
+          maxWidth: 680,
           maxHeight: "88vh",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          boxShadow:
-            "0 40px 120px rgba(0,0,0,0.8),0 0 60px rgba(13,148,136,0.08)",
-          animation: "slideUp 0.3s ease",
+          boxShadow: "0 40px 120px rgba(0,0,0,0.72)",
+          animation: "slide-up 0.27s ease",
         }}
       >
         <div
@@ -1215,17 +1324,17 @@ function Modal({ page, onClose }: { page: ModalPage; onClose: () => void }) {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: "24px 32px 20px",
-            borderBottom: "1px solid rgba(20,184,166,0.12)",
+            padding: "21px 29px 17px",
+            borderBottom: "1px solid rgba(20,184,166,0.1)",
             flexShrink: 0,
           }}
         >
           <h2
             style={{
-              fontSize: 20,
+              fontSize: 18.5,
               fontWeight: 900,
               fontFamily: "'Playfair Display',serif",
-              color: "#e8f7f5",
+              color: "#edfaf7",
             }}
           >
             {isContact ? "Contact Us" : content!.title}
@@ -1234,24 +1343,24 @@ function Modal({ page, onClose }: { page: ModalPage; onClose: () => void }) {
             className="modal-close"
             onClick={onClose}
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 9,
-              background: "rgba(20,184,166,0.08)",
-              border: "1px solid rgba(20,184,166,0.18)",
+              width: 33,
+              height: 33,
+              borderRadius: 8,
+              background: "rgba(20,184,166,0.07)",
+              border: "1px solid rgba(20,184,166,0.15)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
-              fontSize: 15,
-              color: "rgba(220,250,245,0.55)",
-              transition: "background 0.2s",
+              fontSize: 13,
+              color: "rgba(220,250,245,0.48)",
+              transition: "background 0.18s",
             }}
           >
             ✕
           </button>
         </div>
-        <div style={{ padding: "26px 32px 36px", overflowY: "auto", flex: 1 }}>
+        <div style={{ padding: "23px 29px 32px", overflowY: "auto", flex: 1 }}>
           {isContact ? <ContactForm /> : content!.body}
         </div>
       </div>
@@ -1259,7 +1368,6 @@ function Modal({ page, onClose }: { page: ModalPage; onClose: () => void }) {
   );
 }
 
-// ─── INQUIRY ─────────────────────────────────────────────────────────────────
 function InquiryBox() {
   const [val, setVal] = useState("");
   const [sent, setSent] = useState(false);
@@ -1271,10 +1379,10 @@ function InquiryBox() {
           fontWeight: 700,
           fontSize: 14,
           textAlign: "center",
-          padding: "16px",
+          padding: "15px",
           background: "rgba(13,148,136,0.1)",
-          borderRadius: 14,
-          border: "1px solid rgba(20,184,166,0.25)",
+          borderRadius: 12,
+          border: "1px solid rgba(20,184,166,0.2)",
         }}
       >
         Thanks for sharing! We&apos;ve noted your suggestion. 🙏
@@ -1292,28 +1400,28 @@ function InquiryBox() {
         value={val}
         onChange={(e) => setVal(e.target.value)}
         required
-        placeholder="Tell us what features you'd love, or any concerns you have. We have your best interest at heart…"
+        placeholder="Tell us what features you'd love, or any concerns. We have your best interest at heart…"
         style={{
           flex: 1,
           minWidth: 240,
-          minHeight: 110,
-          padding: "14px 18px",
-          borderRadius: 14,
-          border: "1.5px solid rgba(20,184,166,0.2)",
-          background: "rgba(20,184,166,0.05)",
-          color: "#e8f7f5",
+          minHeight: 106,
+          padding: "13px 16px",
+          borderRadius: 12,
+          border: "1.5px solid rgba(20,184,166,0.17)",
+          background: "rgba(20,184,166,0.042)",
+          color: "#edfaf7",
           fontSize: 14,
           outline: "none",
           resize: "vertical",
           fontFamily: "'DM Sans',sans-serif",
-          transition: "border-color 0.2s",
+          transition: "border-color 0.18s",
         }}
       />
       <button
         type="submit"
         style={{
-          padding: "14px 26px",
-          borderRadius: 14,
+          padding: "13px 23px",
+          borderRadius: 12,
           background: "linear-gradient(135deg,#065f58,#0d9488)",
           color: "#a7f3d0",
           fontWeight: 800,
@@ -1322,7 +1430,7 @@ function InquiryBox() {
           border: "none",
           alignSelf: "flex-end",
           fontFamily: "'DM Sans',sans-serif",
-          boxShadow: "0 6px 24px rgba(13,148,136,0.35)",
+          boxShadow: "0 6px 20px rgba(13,148,136,0.3)",
         }}
       >
         Submit →
@@ -1331,49 +1439,48 @@ function InquiryBox() {
   );
 }
 
-// ─── MAIN ────────────────────────────────────────────────────────────────────
 export default function OFashMarketLanding() {
   const [modal, setModal] = useState<ModalPage>(null);
   const open = useCallback((p: ModalPage) => setModal(p), []);
   const close = useCallback(() => setModal(null), []);
 
   const S: React.CSSProperties = {
-    padding: "110px 24px",
+    padding: "106px 24px",
     position: "relative",
   };
   const Inn: React.CSSProperties = { maxWidth: 1100, margin: "0 auto" };
   const SL: React.CSSProperties = {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: 800,
-    letterSpacing: "0.18em",
+    letterSpacing: "0.2em",
     color: "#14b8a6",
-    textTransform: "uppercase" as const,
-    marginBottom: 12,
+    textTransform: "uppercase",
+    marginBottom: 11,
   };
   const ST: React.CSSProperties = {
     fontFamily: "'Playfair Display',serif",
-    fontSize: "clamp(26px,3.8vw,50px)",
+    fontSize: "clamp(24px,3.5vw,47px)",
     fontWeight: 900,
     letterSpacing: "-1.5px",
     lineHeight: 1.1,
-    marginBottom: 52,
+    marginBottom: 46,
     maxWidth: 600,
-    color: "#e8f7f5",
+    color: "#edfaf7",
   };
   const DIV: React.CSSProperties = {
     width: "100%",
     height: 1,
     background:
-      "linear-gradient(90deg,transparent,rgba(20,184,166,0.15),transparent)",
+      "linear-gradient(90deg,transparent,rgba(20,184,166,0.12),rgba(245,158,11,0.055),transparent)",
   };
-  const flBtn = (onClick?: () => void): React.CSSProperties => ({
+  const flBtn = (): React.CSSProperties => ({
     background: "none",
     border: "none",
     padding: 0,
     cursor: "pointer",
     fontFamily: "'DM Sans',sans-serif",
-    textAlign: "left" as const,
-    transition: "color 0.2s",
+    textAlign: "left",
+    transition: "color 0.18s",
   });
 
   return (
@@ -1381,8 +1488,8 @@ export default function OFashMarketLanding() {
       style={{
         margin: 0,
         padding: 0,
-        background: "#060e0d",
-        color: "#e8f7f5",
+        background: "#050c0b",
+        color: "#edfaf7",
         fontFamily: "'DM Sans','Helvetica Neue',sans-serif",
         overflowX: "hidden",
       }}
@@ -1391,7 +1498,7 @@ export default function OFashMarketLanding() {
       <Spotlight />
       {modal && <Modal page={modal} onClose={close} />}
 
-      {/* ══ NAV ══ */}
+      {/* NAV */}
       <nav
         style={{
           position: "fixed",
@@ -1402,18 +1509,18 @@ export default function OFashMarketLanding() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "14px 48px",
-          borderBottom: "1px solid rgba(20,184,166,0.12)",
-          backdropFilter: "blur(24px)",
-          background: "rgba(6,14,13,0.85)",
+          padding: "13px 48px",
+          borderBottom: "1px solid rgba(20,184,166,0.09)",
+          backdropFilter: "blur(24px) saturate(155%)",
+          background: "rgba(5,12,11,0.82)",
         }}
       >
-        <OFashLogo size={40} textSize={16} />
+        <OFashLogo size={38} textSize={15} />
         <ul
-          className="nav-ul"
+          className="nav-links"
           style={{
             display: "flex",
-            gap: 28,
+            gap: 25,
             listStyle: "none",
             margin: 0,
             padding: 0,
@@ -1430,12 +1537,12 @@ export default function OFashMarketLanding() {
                 href={h}
                 className="nav-link"
                 style={{
-                  color: "rgba(220,250,245,0.52)",
-                  fontSize: 13.5,
+                  color: "rgba(220,250,245,0.46)",
+                  fontSize: 13,
                   fontWeight: 600,
                   cursor: "pointer",
                   textDecoration: "none",
-                  transition: "color 0.2s",
+                  transition: "color 0.18s",
                 }}
               >
                 {l}
@@ -1444,31 +1551,32 @@ export default function OFashMarketLanding() {
           ))}
         </ul>
         <button
-          className="nav-cta"
+          className="nav-cta btn-p"
           onClick={() =>
             document
               .querySelector("#waitlist")
               ?.scrollIntoView({ behavior: "smooth" })
           }
           style={{
-            padding: "10px 22px",
-            borderRadius: 11,
+            padding: "10px 21px",
+            borderRadius: 10,
             background: "linear-gradient(135deg,#065f58,#0d9488,#14b8a6)",
-            color: "#e8f7f5",
+            color: "#edfaf7",
             fontWeight: 800,
-            fontSize: 13.5,
+            fontSize: 13,
             cursor: "pointer",
             border: "none",
-            boxShadow: "0 4px 20px rgba(13,148,136,0.38)",
+            boxShadow: "0 4px 17px rgba(13,148,136,0.33)",
             fontFamily: "'DM Sans',sans-serif",
             transition: "transform 0.15s,box-shadow 0.2s",
+            willChange: "transform",
           }}
         >
           Join Waitlist
         </button>
       </nav>
 
-      {/* ══ HERO ══ */}
+      {/* HERO */}
       <section
         style={{
           minHeight: "100vh",
@@ -1477,31 +1585,44 @@ export default function OFashMarketLanding() {
           alignItems: "center",
           justifyContent: "center",
           textAlign: "center",
-          padding: "160px 24px 90px",
+          padding: "158px 24px 86px",
           position: "relative",
           overflow: "hidden",
         }}
       >
         <BackgroundBeams />
-        {/* Market bg image */}
         <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-          <img
+          {/* FIX 2: added sizes prop */}
+          <Image
             src={IMG.heroMarket}
-            alt="African fashion market"
+            alt=""
+            fill
+            sizes="100vw"
             style={{
-              width: "100%",
-              height: "100%",
               objectFit: "cover",
-              opacity: 0.11,
-              filter: "sepia(10%) saturate(100%) hue-rotate(140deg)",
+              opacity: 0.12,
+              filter: "sepia(16%) saturate(112%) hue-rotate(128deg)",
             }}
+            priority
           />
           <div
             style={{
               position: "absolute",
               inset: 0,
               background:
-                "linear-gradient(to bottom,rgba(6,14,13,0.3) 0%,rgba(6,14,13,0.7) 55%,rgba(6,14,13,1) 100%)",
+                "linear-gradient(to bottom,rgba(5,12,11,0.26) 0%,rgba(5,12,11,0.6) 50%,rgba(5,12,11,1) 100%)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "80%",
+              height: 160,
+              background:
+                "radial-gradient(ellipse,rgba(245,158,11,0.055) 0%,transparent 70%)",
             }}
           />
         </div>
@@ -1513,25 +1634,25 @@ export default function OFashMarketLanding() {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            maxWidth: 980,
+            maxWidth: 1000,
           }}
         >
-          {/* Badge */}
           <div
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: 8,
-              padding: "7px 18px",
+              padding: "6px 16px",
               borderRadius: 100,
-              background: "rgba(20,184,166,0.1)",
-              border: "1px solid rgba(20,184,166,0.32)",
-              fontSize: 12.5,
+              background: "rgba(20,184,166,0.08)",
+              border: "1px solid rgba(20,184,166,0.28)",
+              fontSize: 12,
               color: "#a7f3d0",
               fontWeight: 700,
-              marginBottom: 32,
+              marginBottom: 26,
               letterSpacing: "0.05em",
               backdropFilter: "blur(8px)",
+              animation: "slide-up 0.5s ease",
             }}
           >
             <span
@@ -1541,140 +1662,137 @@ export default function OFashMarketLanding() {
                 borderRadius: "50%",
                 background: "#14b8a6",
                 display: "inline-block",
-                animation: "pulse2 2s infinite",
+                animation: "pulse-dot 2s infinite",
               }}
             />
-            Launching Soon in Lagos · Expanding Rapidly Across Africa
+            Launching Soon in Lagos · Expanding Across Africa
           </div>
 
-          {/* Headline 1 */}
           <h1
             style={{
               fontFamily: "'Playfair Display',serif",
-              fontSize: "clamp(38px,6.5vw,86px)",
+              fontSize: "clamp(36px,6.2vw,82px)",
               fontWeight: 900,
               lineHeight: 1.04,
               letterSpacing: "-3px",
-              marginBottom: 18,
-              maxWidth: 940,
+              marginBottom: 15,
+              maxWidth: 960,
+              animation: "slide-up 0.58s 0.1s ease both",
             }}
           >
             Africa&apos;s Fashion Market,
-            <span
-              style={{
-                display: "block",
-                background:
-                  "linear-gradient(135deg,#a7f3d0 0%,#5eead4 35%,#14b8a6 65%,#0d9488 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
+            <span className="shimmer-text" style={{ display: "block" }}>
               Now One Click Away
             </span>
           </h1>
 
-          {/* Headline 2 */}
           <h2
             style={{
-              fontSize: "clamp(16px,2.2vw,22px)",
+              fontSize: "clamp(14px,2vw,20px)",
               fontWeight: 600,
-              color: "rgba(220,250,245,0.72)",
-              maxWidth: 620,
-              lineHeight: 1.6,
-              marginBottom: 12,
+              color: "rgba(220,250,245,0.68)",
+              maxWidth: 580,
+              lineHeight: 1.62,
+              marginBottom: 10,
               fontFamily: "'DM Sans',sans-serif",
+              animation: "slide-up 0.58s 0.18s ease both",
             }}
           >
-            Access the market without the stress of physically moving from shop
-            to shop.
+            Access the market without the stress of moving from shop to shop.
           </h2>
           <p
             style={{
-              fontSize: "clamp(14px,1.5vw,17px)",
-              color: "rgba(220,250,245,0.45)",
-              maxWidth: 520,
-              lineHeight: 1.8,
-              marginBottom: 12,
-              fontFamily: "'DM Sans',sans-serif",
+              fontSize: "clamp(13px,1.4vw,16px)",
+              color: "rgba(220,250,245,0.4)",
+              maxWidth: 490,
+              lineHeight: 1.82,
+              marginBottom: 10,
+              animation: "slide-up 0.58s 0.24s ease both",
             }}
           >
             Get items delivered within hours, not days.
           </p>
           <p
             style={{
-              fontSize: 14.5,
-              color: "rgba(220,250,245,0.36)",
-              maxWidth: 580,
-              lineHeight: 1.8,
-              marginBottom: 48,
+              fontSize: 13.5,
+              color: "rgba(220,250,245,0.3)",
+              maxWidth: 540,
+              lineHeight: 1.82,
+              marginBottom: 42,
               fontStyle: "italic",
+              animation: "slide-up 0.58s 0.3s ease both",
             }}
           >
-            Imagine accessing Balogun, Onitsha, Dutse and every fashion market —
-            with just one click.
+            Balogun, Onitsha, Dutse every fashion market, in one click.
           </p>
 
-          {/* CTA buttons */}
           <div
             style={{
               display: "flex",
-              gap: 12,
+              gap: 10,
               flexWrap: "wrap",
               justifyContent: "center",
-              marginBottom: 52,
+              marginBottom: 50,
+              animation: "slide-up 0.58s 0.4s ease both",
             }}
           >
             <button
+              className="btn-p"
               onClick={() =>
                 document
                   .querySelector("#waitlist")
                   ?.scrollIntoView({ behavior: "smooth" })
               }
               style={{
-                padding: "16px 38px",
-                borderRadius: 14,
+                padding: "15px 34px",
+                borderRadius: 13,
                 background: "linear-gradient(135deg,#065f58,#0d9488,#14b8a6)",
-                color: "#e8f7f5",
+                color: "#edfaf7",
                 fontWeight: 800,
-                fontSize: 16,
+                fontSize: 15,
                 cursor: "pointer",
                 border: "none",
-                boxShadow: "0 8px 36px rgba(13,148,136,0.48)",
+                boxShadow: "0 8px 30px rgba(13,148,136,0.42)",
                 fontFamily: "'DM Sans',sans-serif",
+                transition: "transform 0.15s,box-shadow 0.2s",
+                willChange: "transform",
               }}
             >
-              Join the Waitlist, Be the First Notified →
+              Join the Waitlist Be First Notified →
             </button>
             <button
+              className="btn-g"
               onClick={() =>
                 document
                   .querySelector("#waitlist")
                   ?.scrollIntoView({ behavior: "smooth" })
               }
               style={{
-                padding: "16px 28px",
-                borderRadius: 14,
-                background: "rgba(20,184,166,0.07)",
-                color: "#e8f7f5",
+                padding: "15px 24px",
+                borderRadius: 13,
+                background: "rgba(245,158,11,0.09)",
+                color: "#fbbf24",
                 fontWeight: 700,
                 fontSize: 15,
                 cursor: "pointer",
-                border: "1px solid rgba(20,184,166,0.25)",
+                border: "1.5px solid rgba(245,158,11,0.28)",
                 fontFamily: "'DM Sans',sans-serif",
+                transition: "transform 0.15s,box-shadow 0.2s",
+                willChange: "transform",
               }}
             >
               Reserve a Spot
             </button>
           </div>
 
-          {/* Stats */}
           <div
             className="stats-r"
             style={{
               display: "flex",
-              gap: 52,
+              gap: 42,
               flexWrap: "wrap",
               justifyContent: "center",
+              animation: "slide-up 0.58s 0.5s ease both",
             }}
           >
             {[
@@ -1686,11 +1804,11 @@ export default function OFashMarketLanding() {
               <div key={l} style={{ textAlign: "center" }}>
                 <div
                   style={{
-                    fontSize: 30,
+                    fontSize: 28,
                     fontWeight: 900,
                     fontFamily: "'Playfair Display',serif",
                     background:
-                      "linear-gradient(135deg,#a7f3d0,#14b8a6,#0d9488)",
+                      "linear-gradient(135deg,#a7f3d0,#14b8a6,#f59e0b)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                     letterSpacing: "-1.5px",
@@ -1700,12 +1818,12 @@ export default function OFashMarketLanding() {
                 </div>
                 <div
                   style={{
-                    fontSize: 11,
-                    color: "rgba(220,250,245,0.38)",
-                    marginTop: 5,
+                    fontSize: 10.5,
+                    color: "rgba(220,250,245,0.34)",
+                    marginTop: 4,
                     fontWeight: 700,
-                    letterSpacing: "0.07em",
-                    textTransform: "uppercase" as const,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
                   }}
                 >
                   {l}
@@ -1714,21 +1832,66 @@ export default function OFashMarketLanding() {
             ))}
           </div>
         </div>
+
+        <div
+          style={{
+            position: "absolute",
+            bottom: 28,
+            right: 28,
+            zIndex: 2,
+            animation: "float-y 3s ease-in-out infinite",
+          }}
+        >
+          <div
+            className="glass"
+            style={{
+              borderRadius: 13,
+              padding: "11px 16px",
+              display: "flex",
+              alignItems: "center",
+              gap: 9,
+              boxShadow: "inset 0 1px 0 rgba(167,243,208,0.07)",
+            }}
+          >
+            <span style={{ fontSize: 20 }}>🛵</span>
+            <div>
+              <p
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  color: "#5eead4",
+                  margin: 0,
+                }}
+              >
+                Bike Delivery
+              </p>
+              <p
+                style={{
+                  fontSize: 10.5,
+                  color: "rgba(220,250,245,0.42)",
+                  margin: 0,
+                }}
+              >
+                30 min – 5 hrs
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* ══ MARQUEE ══ */}
       <Marquee />
 
-      {/* ══ REAL MARKET BANNER ══ */}
-      <div style={{ position: "relative", height: 320, overflow: "hidden" }}>
-        <img
+      {/* MARKET BANNER */}
+      <div style={{ position: "relative", height: 295, overflow: "hidden" }}>
+        {/* FIX 2: added sizes prop */}
+        <Image
           src={IMG.marketScene}
-          alt="African fashion market scene"
+          alt="African fashion market"
+          fill
+          sizes="100vw"
           style={{
-            width: "100%",
-            height: "100%",
             objectFit: "cover",
-            filter: "sepia(5%) saturate(110%) hue-rotate(140deg)",
+            filter: "sepia(7%) saturate(112%) hue-rotate(128deg)",
           }}
         />
         <div
@@ -1736,7 +1899,14 @@ export default function OFashMarketLanding() {
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(to right,rgba(6,14,13,0.9) 0%,rgba(6,14,13,0.3) 50%,rgba(6,14,13,0.9) 100%)",
+              "linear-gradient(to right,rgba(5,12,11,0.9) 0%,rgba(5,12,11,0.22) 50%,rgba(5,12,11,0.9) 100%)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(245,158,11,0.035)",
           }}
         />
         <div
@@ -1753,12 +1923,12 @@ export default function OFashMarketLanding() {
         >
           <p
             style={{
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: 800,
-              letterSpacing: "0.18em",
-              color: "#14b8a6",
-              textTransform: "uppercase" as const,
-              marginBottom: 10,
+              letterSpacing: "0.2em",
+              color: "#f59e0b",
+              textTransform: "uppercase",
+              marginBottom: 8,
             }}
           >
             Inspired by Real Markets
@@ -1766,35 +1936,35 @@ export default function OFashMarketLanding() {
           <h2
             style={{
               fontFamily: "'Playfair Display',serif",
-              fontSize: "clamp(22px,3.5vw,44px)",
+              fontSize: "clamp(20px,3.1vw,40px)",
               fontWeight: 900,
               letterSpacing: "-1.5px",
               lineHeight: 1.15,
-              maxWidth: 700,
-              color: "#e8f7f5",
+              maxWidth: 660,
+              color: "#edfaf7",
             }}
           >
             O-Fash Markett is the digital branch of Africa&apos;s fashion market
           </h2>
           <p
             style={{
-              fontSize: 15,
-              color: "rgba(220,250,245,0.55)",
-              maxWidth: 560,
-              marginTop: 14,
+              fontSize: 14,
+              color: "rgba(220,250,245,0.5)",
+              maxWidth: 500,
+              marginTop: 11,
               lineHeight: 1.75,
             }}
           >
-            Connecting buyers, vendors, and riders into one seamless digital
-            marketplace inspired by the real physical markets you already know
-            and love.
+            Vendors selling fabrics, clothes, shoes and bags. Buyers
+            negotiating. Bike dispatch riders moving through the crowd. Now, in
+            one app.
           </p>
         </div>
       </div>
 
-      {/* ══ WHO WE SERVE ══ */}
+      {/* WHO WE SERVE */}
       <section
-        style={{ ...S, paddingTop: 100, paddingBottom: 80 }}
+        style={{ ...S, paddingTop: 94, paddingBottom: 74 }}
         id="who-we-serve"
       >
         <div style={{ ...Inn, textAlign: "center" }}>
@@ -1804,7 +1974,7 @@ export default function OFashMarketLanding() {
               ...ST,
               maxWidth: "100%",
               textAlign: "center",
-              marginBottom: 14,
+              marginBottom: 11,
             }}
           >
             Built for every player in Africa&apos;s fashion chain
@@ -1812,14 +1982,13 @@ export default function OFashMarketLanding() {
           <p
             style={{
               fontSize: 15,
-              color: "rgba(220,250,245,0.5)",
-              maxWidth: 540,
-              margin: "0 auto 48px",
+              color: "rgba(220,250,245,0.46)",
+              maxWidth: 500,
+              margin: "0 auto 42px",
               lineHeight: 1.8,
             }}
           >
-            Vendors, Buyers and Riders — we&apos;ve got you covered. Reach more
-            people who need your services and make more sales.
+            Vendors, Buyers and Riders — we&apos;ve got you all covered.
           </p>
           <RoleSelector />
         </div>
@@ -1827,7 +1996,7 @@ export default function OFashMarketLanding() {
 
       <div style={DIV} />
 
-      {/* ══ PRODUCT CATEGORIES ══ */}
+      {/* PRODUCT CATEGORIES */}
       <section style={S}>
         <div style={Inn}>
           <p style={SL}>What You&apos;ll Find</p>
@@ -1837,7 +2006,7 @@ export default function OFashMarketLanding() {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(4,1fr)",
-              gap: 14,
+              gap: 12,
             }}
           >
             {[
@@ -1873,7 +2042,7 @@ export default function OFashMarketLanding() {
               },
               {
                 img: IMG.riderBike,
-                label: "Fast Delivery",
+                label: "Bike Delivery 🛵",
                 sub: "30 mins – 5 hours to your door",
               },
               {
@@ -1884,48 +2053,64 @@ export default function OFashMarketLanding() {
             ].map((c, i) => (
               <div
                 key={i}
-                className="cat-img"
+                className="cat-tile"
                 style={{
-                  borderRadius: 16,
+                  borderRadius: 14,
                   overflow: "hidden",
                   position: "relative",
                   aspectRatio: "1",
-                  transition: "transform 0.3s",
+                  transition: "transform 0.3s cubic-bezier(0.34,1.56,0.64,1)",
                   cursor: "default",
+                  willChange: "transform",
                 }}
               >
-                <img
+                {/* FIX 2: added sizes prop */}
+                <Image
                   src={c.img}
                   alt={c.label}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  fill
+                  sizes="(max-width: 600px) 50vw, (max-width: 960px) 25vw, 275px"
+                  style={{ objectFit: "cover" }}
                 />
                 <div
                   style={{
                     position: "absolute",
                     inset: 0,
                     background:
-                      "linear-gradient(to top,rgba(6,14,13,0.97) 0%,rgba(6,14,13,0.08) 55%)",
+                      "linear-gradient(to top,rgba(5,12,11,0.97) 0%,rgba(5,12,11,0.04) 52%)",
                   }}
                 />
                 <div
                   style={{
                     position: "absolute",
-                    bottom: 12,
-                    left: 14,
-                    right: 14,
+                    top: 9,
+                    right: 9,
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "#f59e0b",
+                    opacity: 0.65,
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 10,
+                    left: 12,
+                    right: 12,
                   }}
                 >
                   <p
                     style={{
-                      fontSize: 13,
+                      fontSize: 12.5,
                       fontWeight: 800,
-                      color: "#e8f7f5",
+                      color: "#edfaf7",
                       marginBottom: 2,
                     }}
                   >
                     {c.label}
                   </p>
-                  <p style={{ fontSize: 11, color: "rgba(220,250,245,0.45)" }}>
+                  <p style={{ fontSize: 10.5, color: "rgba(220,250,245,0.4)" }}>
                     {c.sub}
                   </p>
                 </div>
@@ -1937,7 +2122,7 @@ export default function OFashMarketLanding() {
 
       <div style={DIV} />
 
-      {/* ══ HOW IT WORKS ══ */}
+      {/* HOW IT WORKS */}
       <section style={S} id="how-it-works">
         <div style={Inn}>
           <p style={SL}>The O-Fash Flow</p>
@@ -1947,7 +2132,7 @@ export default function OFashMarketLanding() {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(3,1fr)",
-              gap: 20,
+              gap: 17,
             }}
           >
             {[
@@ -1955,67 +2140,69 @@ export default function OFashMarketLanding() {
                 n: "01",
                 icon: "🛍",
                 title: "Buyers Browse & Buy",
-                desc: "Discover curated fashion from hundreds of verified vendors across Nigeria's biggest markets. Clothes, shoes, wigs, bags — all genders, all ages, all in one place.",
+                desc: "Discover curated fashion from hundreds of verified vendors across Nigeria's biggest markets. Clothes, shoes, wigs, bags all genders, all ages.",
                 img: IMG.clothesMen,
+                color: "#5eead4",
               },
               {
                 n: "02",
                 icon: "🏪",
                 title: "Vendors Post & Sell",
-                desc: "Fashion vendors list their collections, manage their digital market stall, and reach thousands of buyers nationwide. From boutiques to market traders — everyone wins.",
+                desc: "List your collections, manage your digital market stall, and reach thousands of buyers nationwide. From boutiques to market traders everyone wins.",
                 img: IMG.vendor1,
+                color: "#fbbf24",
               },
               {
                 n: "03",
                 icon: "🛵",
                 title: "Riders Pick & Deliver",
-                desc: "Our vetted rider network picks up directly from vendors and delivers to your door. Fast, tracked, and reliable — 30 minutes to 5 hours, every single time.",
+                desc: "Our vetted bike rider network picks up from vendors and delivers to your door. Fast, tracked, and reliable 30 minutes to 5 hours, every time.",
                 img: IMG.riderBike,
+                color: "#fb923c",
               },
             ].map((step) => (
               <div
                 key={step.n}
-                className="step-card"
+                className="step-card glass"
                 style={{
-                  borderRadius: 22,
+                  borderRadius: 20,
                   overflow: "hidden",
-                  border: "1px solid rgba(20,184,166,0.12)",
-                  background: "rgba(255,255,255,0.012)",
-                  transition: "border-color 0.3s,transform 0.3s",
+                  transition:
+                    "border-color 0.28s,transform 0.28s cubic-bezier(0.34,1.56,0.64,1)",
+                  willChange: "transform",
                 }}
               >
                 <div
                   style={{
-                    height: 200,
+                    height: 192,
                     overflow: "hidden",
                     position: "relative",
                   }}
                 >
-                  <img
+                  {/* FIX 2: added sizes prop */}
+                  <Image
                     src={step.img}
                     alt={step.title}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
+                    fill
+                    sizes="(max-width: 960px) 100vw, 33vw"
+                    style={{ objectFit: "cover" }}
                   />
                   <div
                     style={{
                       position: "absolute",
                       inset: 0,
                       background:
-                        "linear-gradient(to top,rgba(6,14,13,0.97) 0%,rgba(6,14,13,0.18) 65%)",
+                        "linear-gradient(to top,rgba(5,12,11,0.97) 0%,rgba(5,12,11,0.14) 62%)",
                     }}
                   />
                   <div
                     style={{
                       position: "absolute",
-                      top: 14,
-                      right: 16,
-                      fontSize: 56,
+                      top: 11,
+                      right: 13,
+                      fontSize: 52,
                       fontWeight: 900,
-                      color: "rgba(20,184,166,0.15)",
+                      color: "rgba(255,255,255,0.07)",
                       lineHeight: 1,
                     }}
                   >
@@ -2024,37 +2211,38 @@ export default function OFashMarketLanding() {
                   <div
                     style={{
                       position: "absolute",
-                      bottom: 12,
-                      left: 16,
-                      width: 46,
-                      height: 46,
-                      borderRadius: 12,
-                      background: "rgba(6,14,13,0.88)",
-                      border: "1px solid rgba(20,184,166,0.32)",
+                      bottom: 10,
+                      left: 13,
+                      width: 42,
+                      height: 42,
+                      borderRadius: 10,
+                      background: "rgba(5,12,11,0.88)",
+                      border: "1px solid rgba(20,184,166,0.28)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: 22,
+                      fontSize: 19,
                     }}
                   >
                     {step.icon}
                   </div>
                 </div>
-                <div style={{ padding: "22px 24px 28px" }}>
+                <div style={{ padding: "19px 21px 24px" }}>
                   <h3
                     style={{
-                      fontSize: 18,
+                      fontSize: 17,
                       fontWeight: 900,
-                      marginBottom: 10,
+                      marginBottom: 8,
                       fontFamily: "'Playfair Display',serif",
+                      color: step.color,
                     }}
                   >
                     {step.title}
                   </h3>
                   <p
                     style={{
-                      fontSize: 14,
-                      color: "rgba(220,250,245,0.52)",
+                      fontSize: 13.5,
+                      color: "rgba(220,250,245,0.49)",
                       lineHeight: 1.72,
                     }}
                   >
@@ -2069,34 +2257,34 @@ export default function OFashMarketLanding() {
 
       <div style={DIV} />
 
-      {/* ══ TRUST & SAFETY ══ */}
+      {/* TRUST & SAFETY */}
       <section style={S} id="trust">
         <div style={Inn}>
           <p style={SL}>Trust & Safety</p>
-          <h2 style={ST}>Your money, your goods — always protected</h2>
+          <h2 style={ST}>Your money, your goods always protected</h2>
           <div
             className="trust-g"
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(4,1fr)",
-              gap: 14,
+              gap: 12,
             }}
           >
             {[
               {
                 icon: "🔒",
                 t: "Secure Escrow Payments",
-                d: "Your money is safe with us. We hold it securely until you confirm delivery — then release to the vendor.",
+                d: "Your money is held safely until you confirm delivery then released to the vendor.",
               },
               {
                 icon: "✅",
                 t: "Verified Vendors Only",
-                d: "Every seller goes through strict onboarding checks. No unverified vendors on O-Fash Markett.",
+                d: "Every seller goes through strict onboarding checks before listing any product.",
               },
               {
                 icon: "🛡",
                 t: "Buyer Protection",
-                d: "Items can be returned if not delivered as described. Your purchase is fully backed by our protection policy.",
+                d: "Items can be returned if not delivered as described. Your purchase is fully backed.",
               },
               {
                 icon: "⚡",
@@ -2105,52 +2293,50 @@ export default function OFashMarketLanding() {
               },
               {
                 icon: "📱",
-                t: "Seamless Processes",
-                d: "All activities are smooth, no glitches. A clean, fast, enjoyable experience every time.",
+                t: "Seamless Experience",
+                d: "Clean, fast, glitch-free. A premium digital market in your pocket.",
               },
               {
                 icon: "🛵",
-                t: "Live Delivery Tracking",
+                t: "Live Bike Tracking",
                 d: "Watch your rider in real-time from vendor pickup to your doorstep.",
               },
               {
                 icon: "🌍",
                 t: "Built for Africa",
-                d: "Designed by people who understand Nigeria's fashion markets — from Balogun to Ariaria.",
+                d: "Designed by people who understand Nigerian fashion markets deeply.",
               },
               {
                 icon: "💬",
                 t: "24/7 Support",
-                d: "Our team is always available via the app, WhatsApp, or email — any time of day.",
+                d: "Our team is available via app, WhatsApp, or email any time of day.",
               },
             ].map((f, i) => (
               <div
                 key={i}
-                className="trust-card"
+                className="trust-card glass"
                 style={{
-                  padding: 22,
-                  borderRadius: 18,
-                  background: "rgba(20,184,166,0.025)",
-                  border: "1px solid rgba(20,184,166,0.1)",
-                  transition: "border-color 0.3s,transform 0.3s",
+                  padding: 19,
+                  borderRadius: 16,
+                  transition: "border-color 0.28s,transform 0.28s ease",
+                  willChange: "transform",
                 }}
               >
-                <div style={{ fontSize: 26, marginBottom: 12 }}>{f.icon}</div>
+                <div style={{ fontSize: 24, marginBottom: 10 }}>{f.icon}</div>
                 <h3
                   style={{
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: 800,
-                    marginBottom: 7,
-                    letterSpacing: "-0.3px",
-                    color: "#e8f7f5",
+                    marginBottom: 6,
+                    color: "#edfaf7",
                   }}
                 >
                   {f.t}
                 </h3>
                 <p
                   style={{
-                    fontSize: 13,
-                    color: "rgba(220,250,245,0.5)",
+                    fontSize: 12.5,
+                    color: "rgba(220,250,245,0.45)",
                     lineHeight: 1.68,
                   }}
                 >
@@ -2164,41 +2350,40 @@ export default function OFashMarketLanding() {
 
       <div style={DIV} />
 
-      {/* ══ RIDER FEATURE ══ */}
-      <section style={{ ...S, padding: "80px 24px" }}>
+      {/* RIDER SECTION */}
+      <section style={{ ...S, padding: "78px 24px" }}>
         <div
+          className="rider-g"
           style={{
             ...Inn,
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
-            gap: 56,
+            gap: 50,
             alignItems: "center",
           }}
-          className="rider-cols"
         >
           <div>
-            <p style={SL}>For Riders</p>
-            <h2 style={{ ...ST, marginBottom: 18 }}>
-              Earn on your terms. Deliver fashion across your city.
+            <p style={SL}>For Bike Riders</p>
+            <h2 style={{ ...ST, marginBottom: 15 }}>
+              Earn on your terms. Ride & deliver fashion across your city.
             </h2>
             <p
               style={{
                 fontSize: 15,
-                color: "rgba(220,250,245,0.55)",
+                color: "rgba(220,250,245,0.5)",
                 lineHeight: 1.8,
-                marginBottom: 24,
+                marginBottom: 21,
               }}
             >
-              Join our growing rider network and deliver fashion orders
-              efficiently and timely. Set your hours, maximise earnings, and
-              help connect buyers with the fashion they love.
+              Join our growing bike rider network. Set your hours, maximise
+              earnings, and help connect buyers with the fashion they love.
             </p>
             <div
               style={{
                 display: "flex",
                 flexWrap: "wrap",
                 gap: 8,
-                marginBottom: 28,
+                marginBottom: 24,
               }}
             >
               {[
@@ -2214,9 +2399,9 @@ export default function OFashMarketLanding() {
                   style={{
                     padding: "5px 13px",
                     borderRadius: 100,
-                    background: "rgba(13,148,136,0.12)",
-                    border: "1px solid rgba(20,184,166,0.25)",
-                    fontSize: 12,
+                    background: "rgba(13,148,136,0.09)",
+                    border: "1px solid rgba(20,184,166,0.2)",
+                    fontSize: 11.5,
                     color: "#5eead4",
                     fontWeight: 700,
                   }}
@@ -2226,94 +2411,120 @@ export default function OFashMarketLanding() {
               ))}
             </div>
             <button
+              className="btn-p"
               onClick={() =>
                 document
                   .querySelector("#waitlist")
                   ?.scrollIntoView({ behavior: "smooth" })
               }
               style={{
-                padding: "13px 28px",
+                padding: "13px 27px",
                 borderRadius: 12,
                 background: "linear-gradient(135deg,#065f58,#0d9488,#14b8a6)",
-                color: "#e8f7f5",
+                color: "#edfaf7",
                 fontWeight: 800,
                 fontSize: 14,
                 cursor: "pointer",
                 border: "none",
                 fontFamily: "'DM Sans',sans-serif",
-                boxShadow: "0 6px 24px rgba(13,148,136,0.35)",
+                boxShadow: "0 6px 20px rgba(13,148,136,0.3)",
+                transition: "transform 0.15s,box-shadow 0.2s",
+                willChange: "transform",
               }}
             >
-              Register as a Rider →
+              Register as a Rider 🛵 →
             </button>
           </div>
-          <div
-            style={{
-              position: "relative",
-              borderRadius: 24,
-              overflow: "hidden",
-              aspectRatio: "4/3",
-            }}
-          >
-            <img
-              src={IMG.riderBike}
-              alt="O-Fash rider delivering fashion"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
+
+          <div style={{ position: "relative" }}>
             <div
               style={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "linear-gradient(135deg,rgba(6,14,13,0.2),rgba(6,14,13,0.02))",
+                borderRadius: 22,
+                overflow: "hidden",
+                aspectRatio: "4/3",
+                position: "relative",
+                boxShadow:
+                  "0 28px 78px rgba(0,0,0,0.48),0 0 0 1px rgba(20,184,166,0.14)",
               }}
-            />
+            >
+              {/* FIX 2: added sizes prop */}
+              <Image
+                src={IMG.riderBike}
+                alt="O-Fash bike rider"
+                fill
+                sizes="(max-width: 960px) 100vw, 50vw"
+                style={{ objectFit: "cover" }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "linear-gradient(135deg,rgba(5,12,11,0.16),rgba(5,12,11,0.01))",
+                }}
+              />
+            </div>
             <div
+              className="glass"
               style={{
                 position: "absolute",
-                bottom: 18,
-                left: 18,
-                right: 18,
-                padding: "14px 18px",
-                background: "rgba(6,14,13,0.9)",
-                backdropFilter: "blur(12px)",
-                borderRadius: 14,
-                border: "1px solid rgba(20,184,166,0.22)",
+                bottom: 16,
+                left: 16,
+                right: 16,
+                padding: "13px 17px",
+                borderRadius: 13,
+                backdropFilter: "blur(16px)",
+                boxShadow:
+                  "0 8px 30px rgba(0,0,0,0.38),inset 0 1px 0 rgba(167,243,208,0.07)",
               }}
             >
               <p
                 style={{
-                  fontSize: 13,
+                  fontSize: 12.5,
                   fontWeight: 700,
                   color: "#5eead4",
                   marginBottom: 3,
+                  animation: "ride-across 0.6s ease",
                 }}
               >
                 🛵 Active Rider · Lagos Island
               </p>
-              <p style={{ fontSize: 12, color: "rgba(220,250,245,0.5)" }}>
-                3 deliveries completed today · ₦12,400 earned
+              <p style={{ fontSize: 11.5, color: "rgba(220,250,245,0.46)" }}>
+                3 deliveries today · ₦12,400 earned
               </p>
             </div>
+            <div
+              style={{
+                position: "absolute",
+                top: -18,
+                right: -18,
+                width: 72,
+                height: 72,
+                borderRadius: "50%",
+                background: "rgba(245,158,11,0.11)",
+                filter: "blur(18px)",
+                pointerEvents: "none",
+              }}
+            />
           </div>
         </div>
       </section>
 
       <div style={DIV} />
 
-      {/* ══ WAITLIST ══ */}
+      {/* WAITLIST */}
       <section
-        style={{ ...S, paddingBottom: 80, textAlign: "center" }}
+        style={{ ...S, paddingBottom: 78, textAlign: "center" }}
         id="waitlist"
       >
-        <div style={{ ...Inn, maxWidth: 800 }}>
+        <div style={{ ...Inn, maxWidth: 820 }}>
           <p style={SL}>Join the Waitlist</p>
           <h2
             style={{
               ...ST,
               maxWidth: "100%",
               textAlign: "center",
-              marginBottom: 12,
+              marginBottom: 11,
             }}
           >
             Be the first to access Africa&apos;s digital fashion market
@@ -2321,19 +2532,19 @@ export default function OFashMarketLanding() {
           <p
             style={{
               fontSize: 15,
-              color: "rgba(220,250,245,0.5)",
-              maxWidth: 520,
-              margin: "0 auto 40px",
+              color: "rgba(220,250,245,0.46)",
+              maxWidth: 490,
+              margin: "0 auto 34px",
               lineHeight: 1.8,
             }}
           >
-            Join the waitlist and be the first to be notified once we launch.
             Founding members get exclusive early access and special perks.
           </p>
           <MovingBorderCard r={26}>
             <div
+              className="wl-pad"
               style={{
-                padding: "56px 48px",
+                padding: "50px 46px",
                 position: "relative",
                 overflow: "hidden",
               }}
@@ -2341,25 +2552,33 @@ export default function OFashMarketLanding() {
               <div
                 style={{
                   position: "absolute",
-                  top: -80,
+                  top: -90,
                   left: "50%",
                   transform: "translateX(-50%)",
-                  width: 400,
-                  height: 400,
+                  width: 460,
+                  height: 460,
                   borderRadius: "50%",
                   background:
-                    "radial-gradient(circle,rgba(13,148,136,0.1) 0%,transparent 70%)",
+                    "radial-gradient(circle,rgba(13,148,136,0.08) 0%,rgba(245,158,11,0.025) 50%,transparent 70%)",
                   pointerEvents: "none",
                 }}
               />
               <div style={{ position: "relative", zIndex: 1 }}>
-                <div style={{ fontSize: 44, marginBottom: 14 }}>🛍</div>
+                <div
+                  style={{
+                    fontSize: 40,
+                    marginBottom: 11,
+                    animation: "float-y 2.6s ease-in-out infinite",
+                  }}
+                >
+                  🛍
+                </div>
                 <h3
                   style={{
                     fontFamily: "'Playfair Display',serif",
-                    fontSize: "clamp(22px,3vw,36px)",
+                    fontSize: "clamp(21px,2.8vw,34px)",
                     fontWeight: 900,
-                    marginBottom: 12,
+                    marginBottom: 10,
                     letterSpacing: "-1.5px",
                   }}
                 >
@@ -2367,16 +2586,15 @@ export default function OFashMarketLanding() {
                 </h3>
                 <p
                   style={{
-                    fontSize: 14,
-                    color: "rgba(220,250,245,0.5)",
-                    marginBottom: 32,
+                    fontSize: 13.5,
+                    color: "rgba(220,250,245,0.45)",
                     lineHeight: 1.78,
-                    maxWidth: 460,
-                    margin: "0 auto 32px",
+                    maxWidth: 430,
+                    margin: "0 auto 28px",
                   }}
                 >
-                  Enter your email and WhatsApp number. We will only message you
-                  about our launch update.
+                  Enter your email and WhatsApp. We&apos;ll only contact you
+                  about our launch.
                 </p>
                 <div style={{ display: "flex", justifyContent: "center" }}>
                   <WaitlistForm />
@@ -2385,8 +2603,8 @@ export default function OFashMarketLanding() {
                   style={{
                     display: "flex",
                     justifyContent: "center",
-                    gap: 24,
-                    marginTop: 24,
+                    gap: 20,
+                    marginTop: 20,
                     flexWrap: "wrap",
                   }}
                 >
@@ -2399,8 +2617,8 @@ export default function OFashMarketLanding() {
                     <span
                       key={b}
                       style={{
-                        fontSize: 12,
-                        color: "rgba(220,250,245,0.3)",
+                        fontSize: 11.5,
+                        color: "rgba(220,250,245,0.26)",
                         fontWeight: 600,
                       }}
                     >
@@ -2416,7 +2634,7 @@ export default function OFashMarketLanding() {
 
       <div style={DIV} />
 
-      {/* ══ FAQ ══ */}
+      {/* FAQ */}
       <section style={S} id="faq">
         <div style={Inn}>
           <p style={SL}>FAQ</p>
@@ -2427,48 +2645,49 @@ export default function OFashMarketLanding() {
 
       <div style={DIV} />
 
-      {/* ══ INQUIRY ══ */}
-      <section style={{ ...S, padding: "80px 24px" }}>
-        <div style={{ ...Inn, maxWidth: 760 }}>
+      {/* INQUIRY */}
+      <section style={{ ...S, padding: "74px 24px" }}>
+        <div style={{ ...Inn, maxWidth: 740 }}>
           <p style={SL}>Your Voice Matters</p>
-          <h2 style={{ ...ST, marginBottom: 12 }}>
+          <h2 style={{ ...ST, marginBottom: 11 }}>
             Help us build what you need
           </h2>
           <p
             style={{
               fontSize: 15,
-              color: "rgba(220,250,245,0.5)",
+              color: "rgba(220,250,245,0.45)",
               lineHeight: 1.8,
-              marginBottom: 28,
+              marginBottom: 24,
             }}
           >
-            Let us know what features you&apos;d like us to add, or any
-            concerns. Life&apos;s already hard — let us help make sale, purchase
-            and delivery easier for you in the way that we can.
+            Tell us what features you&apos;d like us to add, or any concerns.
+            Life&apos;s already hard let us help make sale, purchase and
+            delivery easier for you.
           </p>
           <InquiryBox />
         </div>
       </section>
 
-      {/* ══ CLOSING QUOTE ══ */}
+      {/* CLOSING QUOTE */}
       <section
         style={{
           textAlign: "center",
-          padding: "60px 24px 100px",
+          padding: "54px 24px 94px",
           position: "relative",
           overflow: "hidden",
         }}
       >
         <div style={{ position: "absolute", inset: 0 }}>
-          <img
-            src={IMG.market2}
+          {/* FIX 2: added sizes prop */}
+          <Image
+            src={IMG.africanFashion}
             alt=""
+            fill
+            sizes="100vw"
             style={{
-              width: "100%",
-              height: "100%",
               objectFit: "cover",
-              opacity: 0.06,
-              filter: "sepia(20%) hue-rotate(140deg)",
+              opacity: 0.065,
+              filter: "sepia(22%) hue-rotate(128deg)",
             }}
           />
           <div
@@ -2476,7 +2695,14 @@ export default function OFashMarketLanding() {
               position: "absolute",
               inset: 0,
               background:
-                "linear-gradient(to bottom,#060e0d 0%,rgba(6,14,13,0.5) 50%,#060e0d 100%)",
+                "linear-gradient(to bottom,#050c0b 0%,rgba(5,12,11,0.44) 50%,#050c0b 100%)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(245,158,11,0.02)",
             }}
           />
         </div>
@@ -2484,30 +2710,30 @@ export default function OFashMarketLanding() {
           style={{
             position: "relative",
             zIndex: 1,
-            maxWidth: 640,
+            maxWidth: 600,
             margin: "0 auto",
           }}
         >
           <p
             style={{
               fontFamily: "'Playfair Display',serif",
-              fontSize: "clamp(18px,2.8vw,34px)",
+              fontSize: "clamp(16px,2.5vw,31px)",
               fontWeight: 700,
               fontStyle: "italic",
-              color: "rgba(220,250,245,0.6)",
+              color: "rgba(220,250,245,0.56)",
               lineHeight: 1.65,
-              marginBottom: 36,
+              marginBottom: 32,
             }}
           >
-            &ldquo;Life&apos;s already hard — let us help make sale, purchase
-            and delivery easier for you in the way that we can.&rdquo;
+            &ldquo;Life&apos;s already hard let us help make sale, purchase and
+            delivery easier for you in the way that we can.&rdquo;
           </p>
-          <OFashLogo size={50} textSize={21} />
+          <OFashLogo size={50} textSize={20} />
           <p
             style={{
-              fontSize: 12,
-              color: "rgba(220,250,245,0.25)",
-              marginTop: 10,
+              fontSize: 11,
+              color: "rgba(220,250,245,0.21)",
+              marginTop: 9,
             }}
           >
             🚀 Launching soon in Lagos, expanding rapidly
@@ -2515,12 +2741,12 @@ export default function OFashMarketLanding() {
         </div>
       </section>
 
-      {/* ══ FOOTER ══ */}
+      {/* FOOTER */}
       <footer
         style={{
-          padding: "60px 48px 44px",
-          borderTop: "1px solid rgba(20,184,166,0.1)",
-          background: "rgba(4,9,8,0.95)",
+          padding: "54px 48px 38px",
+          borderTop: "1px solid rgba(20,184,166,0.08)",
+          background: "rgba(3,6,5,0.97)",
         }}
       >
         <div
@@ -2528,55 +2754,54 @@ export default function OFashMarketLanding() {
           style={{
             display: "grid",
             gridTemplateColumns: "1.8fr 1fr 1fr 1fr",
-            gap: 44,
+            gap: 40,
             maxWidth: 1100,
-            margin: "0 auto 48px",
+            margin: "0 auto 42px",
           }}
         >
-          {/* Brand */}
           <div>
-            <OFashLogo size={46} textSize={18} />
+            <OFashLogo size={42} textSize={16} />
             <p
               style={{
-                fontSize: 13.5,
-                color: "rgba(220,250,245,0.38)",
-                lineHeight: 1.78,
-                marginTop: 16,
-                maxWidth: 260,
+                fontSize: 13,
+                color: "rgba(220,250,245,0.34)",
+                lineHeight: 1.8,
+                marginTop: 13,
+                maxWidth: 245,
               }}
             >
-              Nigeria&apos;s premier fashion marketplace — the digital twin of
+              Nigeria&apos;s premier fashion marketplace the digital twin of
               Africa&apos;s local fashion markets, connecting buyers, vendors
               and riders.
             </p>
             <p
               style={{
-                fontSize: 12,
-                color: "rgba(20,184,166,0.65)",
-                marginTop: 10,
+                fontSize: 11.5,
+                color: "rgba(20,184,166,0.58)",
+                marginTop: 8,
                 fontWeight: 700,
               }}
             >
               🚀 Launching soon in Lagos · Expanding rapidly
             </p>
-            <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
+            <div style={{ display: "flex", gap: 7, marginTop: 17 }}>
               {["𝕏", "in", "📸", "▶"].map((icon) => (
                 <button
                   key={icon}
                   className="social-btn"
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 9,
-                    background: "rgba(20,184,166,0.07)",
-                    border: "1px solid rgba(20,184,166,0.16)",
+                    width: 33,
+                    height: 33,
+                    borderRadius: 8,
+                    background: "rgba(20,184,166,0.065)",
+                    border: "1px solid rgba(20,184,166,0.14)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 14,
+                    fontSize: 13,
                     cursor: "pointer",
-                    transition: "all 0.2s",
-                    color: "#e8f7f5",
+                    transition: "all 0.18s",
+                    color: "#edfaf7",
                   }}
                 >
                   {icon}
@@ -2584,192 +2809,78 @@ export default function OFashMarketLanding() {
               ))}
             </div>
           </div>
-
-          {/* Company */}
-          <div>
-            <p
-              style={{
-                fontSize: 11,
-                fontWeight: 800,
-                letterSpacing: "0.14em",
-                color: "rgba(220,250,245,0.3)",
-                textTransform: "uppercase" as const,
-                marginBottom: 18,
-              }}
-            >
-              Company
-            </p>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column" as const,
-                gap: 12,
-              }}
-            >
-              {["About Us", "Careers", "Blog", "Press Kit"].map((l) => (
-                <button
-                  key={l}
-                  className="footer-link"
-                  style={{
-                    ...flBtn(),
-                    fontSize: 14,
-                    color: "rgba(220,250,245,0.48)",
-                  }}
-                >
-                  {l}
-                </button>
-              ))}
+          {[
+            {
+              title: "Company",
+              links: [["About Us"], ["Careers"], ["Blog"], ["Press Kit"]],
+            },
+            {
+              title: "Legal",
+              links: [
+                ["Privacy Policy", "privacy"],
+                ["Terms of Service", "terms"],
+                ["Cookie Policy", "privacy"],
+                ["Vendor Agreement"],
+              ],
+            },
+            {
+              title: "Support",
+              links: [
+                ["Contact Us", "contact"],
+                ["Help Centre"],
+                ["Rider Support"],
+                ["Vendor Support"],
+              ],
+            },
+          ].map((col) => (
+            <div key={col.title}>
+              <p
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 800,
+                  letterSpacing: "0.15em",
+                  color: "rgba(220,250,245,0.26)",
+                  textTransform: "uppercase",
+                  marginBottom: 15,
+                }}
+              >
+                {col.title}
+              </p>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 10 }}
+              >
+                {col.links.map(([l, p]) => (
+                  <button
+                    key={l}
+                    className="footer-link"
+                    onClick={p ? () => open(p as ModalPage) : undefined}
+                    style={{
+                      ...flBtn(),
+                      fontSize: 13,
+                      color: "rgba(220,250,245,0.42)",
+                    }}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <p
-              style={{
-                fontSize: 11,
-                fontWeight: 800,
-                letterSpacing: "0.14em",
-                color: "rgba(220,250,245,0.3)",
-                textTransform: "uppercase" as const,
-                marginBottom: 18,
-              }}
-            >
-              Legal
-            </p>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column" as const,
-                gap: 12,
-              }}
-            >
-              <button
-                className="footer-link"
-                onClick={() => open("privacy")}
-                style={{
-                  ...flBtn(() => open("privacy")),
-                  fontSize: 14,
-                  color: "rgba(220,250,245,0.48)",
-                }}
-              >
-                Privacy Policy
-              </button>
-              <button
-                className="footer-link"
-                onClick={() => open("terms")}
-                style={{
-                  ...flBtn(() => open("terms")),
-                  fontSize: 14,
-                  color: "rgba(220,250,245,0.48)",
-                }}
-              >
-                Terms of Service
-              </button>
-              <button
-                className="footer-link"
-                onClick={() => open("privacy")}
-                style={{
-                  ...flBtn(),
-                  fontSize: 14,
-                  color: "rgba(220,250,245,0.48)",
-                }}
-              >
-                Cookie Policy
-              </button>
-              <button
-                className="footer-link"
-                style={{
-                  ...flBtn(),
-                  fontSize: 14,
-                  color: "rgba(220,250,245,0.48)",
-                }}
-              >
-                Vendor Agreement
-              </button>
-            </div>
-          </div>
-
-          {/* Support */}
-          <div>
-            <p
-              style={{
-                fontSize: 11,
-                fontWeight: 800,
-                letterSpacing: "0.14em",
-                color: "rgba(220,250,245,0.3)",
-                textTransform: "uppercase" as const,
-                marginBottom: 18,
-              }}
-            >
-              Support
-            </p>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column" as const,
-                gap: 12,
-              }}
-            >
-              <button
-                className="footer-link"
-                onClick={() => open("contact")}
-                style={{
-                  ...flBtn(() => open("contact")),
-                  fontSize: 14,
-                  color: "rgba(220,250,245,0.48)",
-                }}
-              >
-                Contact Us
-              </button>
-              <button
-                className="footer-link"
-                style={{
-                  ...flBtn(),
-                  fontSize: 14,
-                  color: "rgba(220,250,245,0.48)",
-                }}
-              >
-                Help Centre
-              </button>
-              <button
-                className="footer-link"
-                style={{
-                  ...flBtn(),
-                  fontSize: 14,
-                  color: "rgba(220,250,245,0.48)",
-                }}
-              >
-                Rider Support
-              </button>
-              <button
-                className="footer-link"
-                style={{
-                  ...flBtn(),
-                  fontSize: 14,
-                  color: "rgba(220,250,245,0.48)",
-                }}
-              >
-                Vendor Support
-              </button>
-            </div>
-          </div>
+          ))}
         </div>
-
-        {/* Bottom bar */}
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             flexWrap: "wrap",
-            gap: 14,
+            gap: 12,
             maxWidth: 1100,
             margin: "0 auto",
-            paddingTop: 28,
-            borderTop: "1px solid rgba(20,184,166,0.08)",
+            paddingTop: 24,
+            borderTop: "1px solid rgba(20,184,166,0.065)",
           }}
         >
-          <p style={{ fontSize: 12.5, color: "rgba(220,250,245,0.24)" }}>
+          <p style={{ fontSize: 11.5, color: "rgba(220,250,245,0.21)" }}>
             © {new Date().getFullYear()} O-Fash Markett. All rights reserved.
             Nigeria 🇳🇬
           </p>
@@ -2779,7 +2890,7 @@ export default function OFashMarketLanding() {
               alignItems: "center",
               gap: 6,
               fontSize: 11,
-              color: "rgba(220,250,245,0.26)",
+              color: "rgba(220,250,245,0.23)",
             }}
           >
             <span
@@ -2789,24 +2900,25 @@ export default function OFashMarketLanding() {
                 borderRadius: "50%",
                 background: "#14b8a6",
                 display: "inline-block",
-                animation: "pulse2 2s infinite",
+                animation: "pulse-dot 2s infinite",
               }}
             />
+            All systems operational
           </div>
-          <div style={{ display: "flex", gap: 18 }}>
+          <div style={{ display: "flex", gap: 15 }}>
             {[
-              ["Privacy", "privacy" as ModalPage],
-              ["Terms", "terms" as ModalPage],
-              ["Contact", "contact" as ModalPage],
+              ["Privacy", "privacy"],
+              ["Terms", "terms"],
+              ["Contact", "contact"],
             ].map(([l, p]) => (
               <button
                 key={l}
                 className="footer-link"
                 onClick={() => open(p as ModalPage)}
                 style={{
-                  ...flBtn(() => open(p as ModalPage)),
-                  fontSize: 12.5,
-                  color: "rgba(220,250,245,0.32)",
+                  ...flBtn(),
+                  fontSize: 11.5,
+                  color: "rgba(220,250,245,0.28)",
                 }}
               >
                 {l}
