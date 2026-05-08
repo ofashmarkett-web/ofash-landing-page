@@ -15,7 +15,6 @@ import {
 import {
   Menu,
   X,
-  ChevronDown,
   ArrowRight,
   Share2,
   Globe,
@@ -382,7 +381,7 @@ function Spotlight() {
         ref.current.style.transform = `translate(${cx - 400}px,${cy - 400}px)`;
       id = requestAnimationFrame(tick);
     };
-    const mv = (e: MouseEvent) => {
+    const mv = (e: any) => {
       tx = e.clientX;
       ty = e.clientY;
     };
@@ -592,37 +591,6 @@ function Navigation({ onWaitlistClick }: { onWaitlistClick: () => void }) {
   );
 }
 
-// ────── MOVING BORDER CARD ──────
-function MovingBorderCard({
-  children,
-  r = 24,
-}: {
-  children: React.ReactNode;
-  r?: number;
-}) {
-  const { isDark } = useTheme();
-  return (
-    <div style={{ position: "relative", borderRadius: r, padding: 1.5 }}>
-      <div
-        className="mborder-conic"
-        style={{ position: "absolute", inset: 0, borderRadius: r }}
-      />
-      <div
-        style={{
-          position: "relative",
-          background: isDark
-            ? "linear-gradient(145deg,#071412,#0a1a17)"
-            : "linear-gradient(145deg,#e0ebe8,#eef6f4)",
-          borderRadius: r - 1.5,
-          zIndex: 1,
-        }}
-      >
-        {children}
-      </div>
-    </div>
-  );
-}
-
 // ────── WAITLIST FORM ──────
 function WaitlistForm({ compact = false }: { compact?: boolean }) {
   const { isDark } = useTheme();
@@ -700,7 +668,7 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
             marginBottom: 5,
           }}
         >
-          You're on the list!
+          You&apos;re on the list!
         </p>
         <p
           style={{
@@ -709,8 +677,8 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
             lineHeight: 1.72,
           }}
         >
-          Check your inbox — confirmation sent! We'll notify you the moment we
-          launch.
+          Check your inbox — confirmation sent! We&apos;ll notify you the moment
+          we launch.
         </p>
       </div>
     );
@@ -936,39 +904,6 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
         </div>
       )}
     </form>
-  );
-}
-
-// ────── COUNTER ──────
-function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0);
-  const ref = useRef<HTMLSpanElement>(null);
-  useEffect(() => {
-    const ob = new IntersectionObserver(
-      ([e]) => {
-        if (!e.isIntersecting) return;
-        const dur = 1600,
-          s = performance.now();
-        const tick = (now: number) => {
-          const p = Math.min((now - s) / dur, 1);
-          const ease = 1 - Math.pow(1 - p, 3);
-          setCount(Math.floor(ease * target));
-          if (p < 1) requestAnimationFrame(tick);
-          else setCount(target);
-        };
-        requestAnimationFrame(tick);
-        ob.disconnect();
-      },
-      { threshold: 0.5 },
-    );
-    if (ref.current) ob.observe(ref.current);
-    return () => ob.disconnect();
-  }, [target]);
-  return (
-    <span ref={ref}>
-      {count.toLocaleString()}
-      {suffix}
-    </span>
   );
 }
 
@@ -1790,7 +1725,7 @@ function ContactForm() {
             marginTop: 7,
           }}
         >
-          We'll get back to you within 24 hours.
+          We&apos;ll get back to you within 24 hours.
         </p>
       </div>
     );
@@ -2324,7 +2259,7 @@ function InquiryBox() {
           border: `1px solid ${palette.teal.light}`,
         }}
       >
-        Thanks for sharing! We've noted your suggestion. 🙏
+        Thanks for sharing! We&apos;ve noted your suggestion. 🙏
       </p>
     );
 
@@ -2438,7 +2373,7 @@ function MarketBanner() {
             color: "#edfaf7",
           }}
         >
-          The Digital Twin of Africa's Fashion Markets
+          The Digital Twin of Africa&apos;s Fashion Markets
         </h2>
       </div>
     </div>
@@ -2486,8 +2421,8 @@ function Footer({ onLinkClick }: { onLinkClick: (page: ModalPage) => void }) {
                 maxWidth: 270,
               }}
             >
-              Africa's premier fashion marketplace connecting buyers, vendors,
-              and riders.
+              Africa&apos;s premier fashion marketplace connecting buyers,
+              vendors, and riders.
             </p>
             <p
               style={{
@@ -2759,7 +2694,7 @@ function WaitlistPage({ onBack }: { onBack: () => void }) {
             color: palette.teal.lighter,
           }}
         >
-          You're on the list!
+          You&apos;re on the list!
         </h1>
         <p
           style={{
@@ -2770,8 +2705,8 @@ function WaitlistPage({ onBack }: { onBack: () => void }) {
             marginBottom: 32,
           }}
         >
-          Check your inbox for a confirmation email. We'll notify you the moment
-          we launch in Lagos.
+          Check your inbox for a confirmation email. We&apos;ll notify you the
+          moment we launch in Lagos.
         </p>
         <button
           onClick={onBack}
@@ -3098,7 +3033,7 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
             animation: "slide-up 0.6s 0.1s ease both",
           }}
         >
-          Africa's Fashion Market,
+          Africa&apos;s Fashion Market,
           <span
             className="shimmer-text"
             style={{ display: "block", marginTop: 8 }}
@@ -3344,7 +3279,7 @@ function OFashMarketLanding() {
                     lineHeight: 1.8,
                   }}
                 >
-                  Buyers, Vendors, Riders — we've built for all of you.
+                  Buyers, Vendors, Riders — we&apos;ve built for all of you.
                 </p>
                 <RoleSelector onSelectRole={() => handleWaitlistClick()} />
               </div>
@@ -3387,9 +3322,9 @@ function OFashMarketLanding() {
                     marginBottom: 24,
                   }}
                 >
-                  Tell us what features you'd like us to add, or any concerns.
-                  Life's already hard let us help make sale, purchase and
-                  delivery easier for you.
+                  Tell us what features you&apos;d like us to add, or any
+                  concerns. Life&apos;s already hard let us help make sale,
+                  purchase and delivery easier for you.
                 </p>
                 <InquiryBox />
               </div>
