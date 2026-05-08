@@ -7,6 +7,9 @@ const FROM = "O-Fash Markett <contact@o-fashmarkett.com>";
 const TEAM_EMAIL = "contact@o-fashmarkett.com";
 const YEAR = new Date().getFullYear();
 
+// In-memory store for registered emails (replace with database in production)
+const registeredEmails = new Set<string>();
+
 export async function POST(req: NextRequest) {
   try {
     // Validate Resend API key
@@ -19,11 +22,22 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const email: string = (body.email ?? "").trim();
+    const email: string = (body.email ?? "").trim().toLowerCase();
     const whatsapp: string = (body.whatsapp ?? "").trim();
 
     if (!email || !email.includes("@")) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
+    }
+
+    // Check for duplicate email registration
+    if (registeredEmails.has(email)) {
+      return NextResponse.json(
+        {
+          error:
+            "This email is already on the waitlist. Check your inbox for confirmation!",
+        },
+        { status: 409 },
+      );
     }
 
     const hasWhatsApp = whatsapp.length > 0;
@@ -263,6 +277,9 @@ export async function POST(req: NextRequest) {
       // Still return success to user even if team email fails
       console.warn("[waitlist] User email sent but team notification failed");
     }
+
+    // Add email to registered set after successful email send
+    registeredEmails.add(email);
 
     return NextResponse.json(
       {
