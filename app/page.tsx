@@ -199,10 +199,9 @@ function GlobalStyles() {
 }
 
 // ────── LOGO ──────
+
 function OFashLogo({ size = 44, textSize = 18, dark = true }) {
-  const style = dark
-    ? { textColor: "#a7f3d0", gradStart: "#042e2a", gradEnd: "#0d9488" }
-    : { textColor: "#0d9488", gradStart: "#e0ebe8", gradEnd: "#a7f3d0" };
+  const style = dark ? { textColor: "#a7f3d0" } : { textColor: "#0d9488" };
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -212,30 +211,23 @@ function OFashLogo({ size = 44, textSize = 18, dark = true }) {
           height: size,
           flexShrink: 0,
           borderRadius: Math.round(size * 0.22),
-          background: `linear-gradient(135deg,${style.gradStart},${style.gradEnd})`,
-          boxShadow: `0 0 0 1.5px ${dark ? "rgba(20,184,166,0.3)" : "rgba(13,148,136,0.25)"}, 0 4px ${size * 0.5}px ${dark ? "rgba(13,148,136,0.2)" : "rgba(13,148,136,0.15)"}`,
+          overflow: "hidden",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <svg
-          width={size * 0.6}
-          height={size * 0.6}
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M4 6h7a3 3 0 010 6H4V6z" fill={style.textColor} />
-          <path d="M4 12h5v6H4v-6z" fill={style.textColor} opacity="0.6" />
-          <path d="M13 6h7v3h-7V6z" fill={palette.gold.main} />
-          <path
-            d="M13 10.5h5v3h-5v-3z"
-            fill={palette.gold.main}
-            opacity="0.7"
-          />
-        </svg>
+        <Image
+          src="/logo.png"
+          alt="O-Fash Logo"
+          width={size}
+          height={size}
+          style={{
+            objectFit: "contain",
+          }}
+        />
       </div>
+
       <div>
         <div
           style={{
@@ -251,6 +243,7 @@ function OFashLogo({ size = 44, textSize = 18, dark = true }) {
         >
           O-Fash
         </div>
+
         <div
           style={{
             fontSize: Math.max(textSize * 0.45, 7),
