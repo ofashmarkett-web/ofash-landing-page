@@ -63,16 +63,16 @@ const colors = {
     glassBorder: "rgba(20,184,166,0.15)",
   },
   light: {
-    bg: "#f8fdfb",
-    bgAlt: "#eef6f4",
-    bgAlt2: "#e0ebe8",
+    bg: "#e6f4f1",
+    bgAlt: "rgba(13,148,136,0.07)",
+    bgAlt2: "rgba(13,148,136,0.04)",
     text: "#042e2a",
-    textMuted: "rgba(4,46,42,0.65)",
-    textMuted2: "rgba(4,46,42,0.45)",
-    border: "rgba(13,148,136,0.15)",
-    borderLight: "rgba(13,148,136,0.35)",
-    glass: "rgba(167,243,208,0.08)",
-    glassBorder: "rgba(13,148,136,0.25)",
+    textMuted: "rgba(4,46,42,0.82)",
+    textMuted2: "rgba(4,46,42,0.60)",
+    border: "rgba(13,116,104,0.50)",
+    borderLight: "rgba(13,116,104,0.75)",
+    glass: "rgba(13,148,136,0.08)",
+    glassBorder: "rgba(13,116,104,0.48)",
   },
 };
 
@@ -153,6 +153,8 @@ function GlobalStyles() {
       @keyframes rotate-border{to{--angle:360deg}}
       @keyframes beam-fall{0%{opacity:0;transform:scaleY(0) translateY(-110%)}15%{opacity:1}80%{opacity:.8}100%{opacity:0;transform:scaleY(1) translateY(110%)}}
       @keyframes ride-across{from{transform:translateX(-80px);opacity:0}to{transform:translateX(0);opacity:1}}
+      @keyframes spin-loader{to{transform:rotate(360deg)}}
+      @keyframes loader-fill{from{width:0%}to{width:100%}}
 
       @property --angle{syntax:'<angle>';initial-value:0deg;inherits:false;}
 
@@ -165,6 +167,8 @@ function GlobalStyles() {
         animation:rotate-border 3.4s linear infinite;
       }
       .glass{background:${c.glass};backdrop-filter:blur(16px) saturate(155%);-webkit-backdrop-filter:blur(16px) saturate(155%);border:1px solid ${c.glassBorder};}
+      .modal-body p{color:${c.textMuted}!important;}
+      .modal-body h2{color:${isDark ? palette.teal.lighter : "#0f766e"}!important;}
 
       .nav-link:hover{color:${palette.teal.lighter}!important;}
       .nav-cta:hover{transform:translateY(-2px)!important;box-shadow:0 12px 36px rgba(13,148,136,0.35)!important;}
@@ -407,6 +411,9 @@ function Spotlight() {
 
 // ────── MARQUEES ──────
 function Marquee({ type = "markets" }) {
+  const { isDark } = useTheme();
+  const c = colors[isDark ? "dark" : "light"];
+
   const markets = [
     "🏪 Balogun Market",
     "🏬 Onitsha Central",
@@ -434,10 +441,10 @@ function Marquee({ type = "markets" }) {
     <div
       style={{
         overflow: "hidden",
-        borderTop: `1px solid ${colors.dark.border}`,
-        borderBottom: `1px solid ${colors.dark.border}`,
+        borderTop: `1px solid ${c.border}`,
+        borderBottom: `1px solid ${c.border}`,
         padding: "16px 0",
-        background: "rgba(20,184,166,0.02)",
+        background: isDark ? "rgba(20,184,166,0.02)" : "rgba(13,148,136,0.05)",
       }}
     >
       <div
@@ -455,7 +462,7 @@ function Marquee({ type = "markets" }) {
             style={{
               fontSize: 13,
               fontWeight: 700,
-              color: "rgba(220,250,245,0.38)",
+              color: isDark ? "rgba(220,250,245,0.45)" : "rgba(4,46,42,0.60)",
               whiteSpace: "nowrap",
               letterSpacing: "0.08em",
             }}
@@ -655,7 +662,7 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
         </div>
         <p
           style={{
-            color: palette.teal.lighter,
+            color: isDark ? palette.teal.lighter : "#0f766e",
             fontWeight: 800,
             fontSize: 17,
             marginBottom: 5,
@@ -777,7 +784,7 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
                 role === r
                   ? `1.5px solid ${palette.teal.light}`
                   : `1.5px solid ${c.border}`,
-              color: role === r ? palette.teal.lighter : c.textMuted2,
+              color: role === r ? (isDark ? palette.teal.lighter : "#0f766e") : c.textMuted2,
             }}
           >
             {r === "buyer"
@@ -919,7 +926,7 @@ function RoleSelector({
       desc: "Discover fashion items from Nigeria's top markets. Clothes, shoes, bags, fabrics — delivered fast.",
       img: IMG.couple,
       accent: palette.teal.light,
-      color: palette.teal.lighter,
+      color: isDark ? palette.teal.lighter : "#0f766e",
     },
     {
       id: "vendor" as UserRole,
@@ -1276,7 +1283,7 @@ function HowItWorks() {
       title: "Browse & Buy",
       desc: "Discover thousands of fashion items from Nigeria's top markets.",
       img: IMG.couple,
-      accent: palette.teal.lighter,
+      accent: isDark ? palette.teal.lighter : "#0f766e",
     },
     {
       num: "02",
@@ -1284,7 +1291,7 @@ function HowItWorks() {
       title: "Vendors Post & Sell",
       desc: "List collections and reach thousands of buyers nationwide.",
       img: IMG.vendor2,
-      accent: palette.gold.light,
+      accent: isDark ? palette.gold.light : "#b45309",
     },
     {
       num: "03",
@@ -1707,7 +1714,7 @@ function ContactForm() {
       <div style={{ textAlign: "center", padding: 30 }}>
         <div style={{ fontSize: 38, marginBottom: 11 }}>✅</div>
         <p
-          style={{ color: palette.teal.lighter, fontWeight: 700, fontSize: 15 }}
+          style={{ color: isDark ? palette.teal.lighter : "#0f766e", fontWeight: 700, fontSize: 15 }}
         >
           Message sent!
         </p>
@@ -2218,6 +2225,7 @@ function Modal({ page, onClose }: { page: ModalPage; onClose: () => void }) {
           </button>
         </div>
         <div
+          className="modal-body"
           style={{
             padding: "23px 29px 32px",
             overflowY: "auto",
@@ -2242,7 +2250,7 @@ function InquiryBox() {
     return (
       <p
         style={{
-          color: palette.teal.lighter,
+          color: isDark ? palette.teal.lighter : "#0f766e",
           fontWeight: 700,
           fontSize: 14,
           textAlign: "center",
@@ -2420,7 +2428,7 @@ function Footer({ onLinkClick }: { onLinkClick: (page: ModalPage) => void }) {
             <p
               style={{
                 fontSize: 11.5,
-                color: palette.teal.lighter,
+                color: isDark ? palette.teal.lighter : "#0f766e",
                 marginTop: 8,
                 fontWeight: 700,
               }}
@@ -2684,7 +2692,7 @@ function WaitlistPage({ onBack }: { onBack: () => void }) {
             fontFamily: "'Playfair Display',serif",
             fontWeight: 900,
             marginBottom: 14,
-            color: palette.teal.lighter,
+            color: isDark ? palette.teal.lighter : "#0f766e",
           }}
         >
           You&apos;re on the list!
@@ -2806,7 +2814,7 @@ function WaitlistPage({ onBack }: { onBack: () => void }) {
                       ? "rgba(13,148,136,0.2)"
                       : "rgba(13,148,136,0.08)",
                   border: `1.5px solid ${role === r ? palette.teal.light : c.border}`,
-                  color: role === r ? palette.teal.lighter : c.textMuted2,
+                  color: role === r ? (isDark ? palette.teal.lighter : "#0f766e") : c.textMuted2,
                   transition: "all 0.25s",
                 }}
               >
@@ -3201,7 +3209,7 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
               style={{
                 fontSize: 12,
                 fontWeight: 800,
-                color: palette.teal.lighter,
+                color: isDark ? palette.teal.lighter : "#0f766e",
                 margin: 0,
               }}
             >
@@ -3217,117 +3225,260 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
   );
 }
 
-// ────── MAIN APP ──────
-function OFashMarketLanding() {
+// ────── PAGE LOADER ──────
+function PageLoader({ isVisible }: { isVisible: boolean }) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background: "#050c0b",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 26,
+        opacity: isVisible ? 1 : 0,
+        pointerEvents: isVisible ? "all" : "none",
+        transition: "opacity 0.75s ease",
+      }}
+    >
+      <div style={{ position: "relative", width: 94, height: 94 }}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: "50%",
+            border: "2px solid rgba(20,184,166,0.12)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: "50%",
+            border: "2.5px solid transparent",
+            borderTopColor: "#14b8a6",
+            borderRightColor: "#f59e0b",
+            animation: "spin-loader 1.1s linear infinite",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            inset: 12,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "50%",
+            background: "rgba(6,95,88,0.18)",
+            border: "1px solid rgba(20,184,166,0.22)",
+            overflow: "hidden",
+          }}
+        >
+          <Image
+            src="/logo.png"
+            alt="O-Fash Markett"
+            width={54}
+            height={54}
+            style={{ objectFit: "contain", borderRadius: 8 }}
+            priority
+          />
+        </div>
+      </div>
+
+      <div style={{ textAlign: "center" }}>
+        <div
+          style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: 27,
+            fontWeight: 900,
+            letterSpacing: "-0.5px",
+            background:
+              "linear-gradient(90deg,#a7f3d0,#5eead4,#fbbf24,#5eead4,#a7f3d0)",
+            backgroundSize: "220% auto",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            animation: "shimmer 3s linear infinite",
+            marginBottom: 8,
+          }}
+        >
+          O-Fash Markett
+        </div>
+        <div
+          style={{
+            fontSize: 11.5,
+            color: "rgba(220,250,245,0.42)",
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+            fontWeight: 600,
+            fontFamily: "'Sora',sans-serif",
+          }}
+        >
+          Africa&apos;s Fashion Market
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8 }}>
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: i === 1 ? "#f59e0b" : "#14b8a6",
+              animation: `pulse-dot 1.4s ${i * 0.22}s ease-in-out infinite`,
+            }}
+          />
+        ))}
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 3,
+          background: "rgba(20,184,166,0.08)",
+        }}
+      >
+        <div
+          style={{
+            height: "100%",
+            background: "linear-gradient(90deg,#0d9488,#14b8a6 60%,#f59e0b)",
+            animation: "loader-fill 2.6s cubic-bezier(0.22,1,0.36,1) forwards",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ────── APP CONTENT (inner component with theme + loading access) ──────
+function AppContent() {
+  const { isDark } = useTheme();
+  const c = colors[isDark ? "dark" : "light"];
   const [currentPage, setCurrentPage] = useState<"home" | "waitlist">("home");
   const [modal, setModal] = useState<ModalPage>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleWaitlistClick = () => {
-    setCurrentPage("waitlist");
-  };
+  useEffect(() => {
+    const t = setTimeout(() => setIsLoading(false), 2600);
+    return () => clearTimeout(t);
+  }, []);
 
-  const handleBackHome = () => {
-    setCurrentPage("home");
-  };
-
+  const handleWaitlistClick = () => setCurrentPage("waitlist");
+  const handleBackHome = () => setCurrentPage("home");
   const openModal = useCallback((p: ModalPage) => setModal(p), []);
   const closeModal = useCallback(() => setModal(null), []);
 
   return (
-    <ThemeProvider>
-      <div style={{ margin: 0, padding: 0, overflowX: "hidden" }}>
-        <GlobalStyles />
-        <Spotlight />
+    <div style={{ margin: 0, padding: 0, overflowX: "hidden" }}>
+      <PageLoader isVisible={isLoading} />
+      <GlobalStyles />
+      <Spotlight />
 
-        {currentPage === "home" ? (
-          <>
-            <Navigation onWaitlistClick={handleWaitlistClick} />
-            {modal && <Modal page={modal} onClose={closeModal} />}
-            <Hero onWaitlistClick={handleWaitlistClick} />
-            <Marquee type="markets" />
-            <MarketBanner />
-            <Marquee type="goods" />
-            <section
-              id="who-we-serve"
-              style={{ padding: "90px 24px", textAlign: "center" }}
-            >
-              <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-                <h2
-                  style={{
-                    fontSize: "clamp(28px,4vw,52px)",
-                    fontWeight: 900,
-                    fontFamily: "'Playfair Display',serif",
-                    marginBottom: 12,
-                    letterSpacing: "-1px",
-                  }}
-                >
-                  For Everyone in the Fashion Chain
-                </h2>
-                <p
-                  style={{
-                    fontSize: 15.5,
-                    color: colors.dark.textMuted,
-                    maxWidth: 600,
-                    margin: "0 auto 48px",
-                    lineHeight: 1.8,
-                  }}
-                >
-                  Buyers, Vendors, Riders — we&apos;ve built for all of you.
-                </p>
-                <RoleSelector onSelectRole={() => handleWaitlistClick()} />
-              </div>
-            </section>
-            <Categories />
-            <HowItWorks />
-            <Trust />
-            <FAQ />
-            <section style={{ padding: "74px 24px" }}>
-              <div style={{ maxWidth: 740, margin: "0 auto" }}>
-                <p
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 800,
-                    letterSpacing: "0.16em",
-                    color: palette.teal.light,
-                    textTransform: "uppercase",
-                    marginBottom: 24,
-                    textAlign: "center",
-                  }}
-                >
-                  Your Voice Matters
-                </p>
-                <h2
-                  style={{
-                    fontSize: "clamp(28px,4vw,52px)",
-                    fontWeight: 900,
-                    fontFamily: "'Playfair Display',serif",
-                    marginBottom: 11,
-                    letterSpacing: "-1px",
-                  }}
-                >
-                  Help us build what you need
-                </h2>
-                <p
-                  style={{
-                    fontSize: 15,
-                    color: colors.dark.textMuted,
-                    lineHeight: 1.8,
-                    marginBottom: 24,
-                  }}
-                >
-                  Tell us what features you&apos;d like us to add, or any
-                  concerns. Life&apos;s already hard let us help make sale,
-                  purchase and delivery easier for you.
-                </p>
-                <InquiryBox />
-              </div>
-            </section>
-            <Footer onLinkClick={openModal} />
-          </>
-        ) : (
-          <WaitlistPage onBack={handleBackHome} />
-        )}
-      </div>
+      {currentPage === "home" ? (
+        <>
+          <Navigation onWaitlistClick={handleWaitlistClick} />
+          {modal && <Modal page={modal} onClose={closeModal} />}
+          <Hero onWaitlistClick={handleWaitlistClick} />
+          <Marquee type="markets" />
+          <MarketBanner />
+          <Marquee type="goods" />
+          <section
+            id="who-we-serve"
+            style={{ padding: "90px 24px", textAlign: "center" }}
+          >
+            <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+              <h2
+                style={{
+                  fontSize: "clamp(28px,4vw,52px)",
+                  fontWeight: 900,
+                  fontFamily: "'Playfair Display',serif",
+                  marginBottom: 12,
+                  letterSpacing: "-1px",
+                }}
+              >
+                For Everyone in the Fashion Chain
+              </h2>
+              <p
+                style={{
+                  fontSize: 15.5,
+                  color: c.textMuted,
+                  maxWidth: 600,
+                  margin: "0 auto 48px",
+                  lineHeight: 1.8,
+                }}
+              >
+                Buyers, Vendors, Riders — we&apos;ve built for all of you.
+              </p>
+              <RoleSelector onSelectRole={() => handleWaitlistClick()} />
+            </div>
+          </section>
+          <Categories />
+          <HowItWorks />
+          <Trust />
+          <FAQ />
+          <section style={{ padding: "74px 24px" }}>
+            <div style={{ maxWidth: 740, margin: "0 auto" }}>
+              <p
+                style={{
+                  fontSize: 12,
+                  fontWeight: 800,
+                  letterSpacing: "0.16em",
+                  color: isDark ? palette.teal.light : "#0f766e",
+                  textTransform: "uppercase",
+                  marginBottom: 24,
+                  textAlign: "center",
+                }}
+              >
+                Your Voice Matters
+              </p>
+              <h2
+                style={{
+                  fontSize: "clamp(28px,4vw,52px)",
+                  fontWeight: 900,
+                  fontFamily: "'Playfair Display',serif",
+                  marginBottom: 11,
+                  letterSpacing: "-1px",
+                  color: c.text,
+                }}
+              >
+                Help us build what you need
+              </h2>
+              <p
+                style={{
+                  fontSize: 15,
+                  color: c.textMuted,
+                  lineHeight: 1.8,
+                  marginBottom: 24,
+                }}
+              >
+                Tell us what features you&apos;d like us to add, or any
+                concerns. Life&apos;s already hard let us help make sale,
+                purchase and delivery easier for you.
+              </p>
+              <InquiryBox />
+            </div>
+          </section>
+          <Footer onLinkClick={openModal} />
+        </>
+      ) : (
+        <WaitlistPage onBack={handleBackHome} />
+      )}
+    </div>
+  );
+}
+
+// ────── MAIN APP ──────
+function OFashMarketLanding() {
+  return (
+    <ThemeProvider>
+      <AppContent />
     </ThemeProvider>
   );
 }
