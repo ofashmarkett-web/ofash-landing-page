@@ -21,6 +21,7 @@ import {
   AtSign,
   Video,
 } from "lucide-react";
+import { animate, stagger } from "animejs";
 
 // ────── THEME CONTEXT ──────
 type ThemeContextType = {
@@ -55,24 +56,24 @@ const colors = {
     bgAlt: "#0a1512",
     bgAlt2: "#0f1a17",
     text: "#edfaf7",
-    textMuted: "rgba(220,250,245,0.55)",
-    textMuted2: "rgba(220,250,245,0.35)",
-    border: "rgba(20,184,166,0.12)",
-    borderLight: "rgba(20,184,166,0.25)",
+    textMuted: "rgba(220,250,245,0.80)",
+    textMuted2: "rgba(220,250,245,0.58)",
+    border: "rgba(20,184,166,0.14)",
+    borderLight: "rgba(20,184,166,0.28)",
     glass: "rgba(6,95,88,0.08)",
     glassBorder: "rgba(20,184,166,0.15)",
   },
   light: {
-    bg: "#e6f4f1",
-    bgAlt: "rgba(13,148,136,0.07)",
+    bg: "#f3f9f7",
+    bgAlt: "rgba(13,148,136,0.06)",
     bgAlt2: "rgba(13,148,136,0.04)",
-    text: "#042e2a",
-    textMuted: "rgba(4,46,42,0.82)",
-    textMuted2: "rgba(4,46,42,0.60)",
-    border: "rgba(13,116,104,0.50)",
-    borderLight: "rgba(13,116,104,0.75)",
-    glass: "rgba(13,148,136,0.08)",
-    glassBorder: "rgba(13,116,104,0.48)",
+    text: "#02201d",
+    textMuted: "rgba(2,32,29,0.80)",
+    textMuted2: "rgba(2,32,29,0.58)",
+    border: "rgba(13,116,104,0.38)",
+    borderLight: "rgba(13,116,104,0.62)",
+    glass: "rgba(13,148,136,0.07)",
+    glassBorder: "rgba(13,116,104,0.38)",
   },
 };
 
@@ -134,14 +135,16 @@ function GlobalStyles() {
       @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=Sora:wght@400;600;700;800&display=swap');
       
       *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-      html{scroll-behavior:smooth;}
-      body{background:${c.bg};color:${c.text};overflow-x:hidden;font-family:'Sora',sans-serif;transition:background 0.35s, color 0.35s;}
+      html{scroll-behavior:smooth;font-size:17px;}
+      body{background:${c.bg};color:${c.text};overflow-x:hidden;font-family:'Sora',sans-serif;transition:background 0.35s, color 0.35s;font-size:17px;line-height:1.75;-webkit-font-smoothing:antialiased;}
       ::selection{background:rgba(13,148,136,0.25);}
-      ::placeholder{color:${c.textMuted2};}
+      ::placeholder{color:${c.textMuted2};font-size:15px;}
       ::-webkit-scrollbar{width:6px;}
       ::-webkit-scrollbar-track{background:${c.bg};}
       ::-webkit-scrollbar-thumb{background:${palette.teal.light};border-radius:3px;opacity:0.6;}
       ::-webkit-scrollbar-thumb:hover{opacity:0.9;}
+      [data-hero-el]{opacity:0;will-change:transform,opacity;}
+      [data-stagger-child]{opacity:0;will-change:transform,opacity;}
 
       @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
       @keyframes fade-in{from{opacity:0}to{opacity:1}}
@@ -262,6 +265,52 @@ function OFashLogo({ size = 44, textSize = 18, dark = true }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// ────── COUNTER (animated number on scroll) ──────
+function Counter({
+  target,
+  suffix = "",
+  duration = 2200,
+}: {
+  target: number;
+  suffix?: string;
+  duration?: number;
+}) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const fired = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !fired.current) {
+          fired.current = true;
+          const t0 = performance.now();
+          const tick = (now: number) => {
+            const p = Math.min((now - t0) / duration, 1);
+            const eased = 1 - Math.pow(2, -10 * p);
+            setCount(Math.round(eased * target));
+            if (p < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [target, duration]);
+
+  return (
+    <span ref={ref}>
+      {count}
+      {suffix}
+    </span>
   );
 }
 
@@ -460,9 +509,9 @@ function Marquee({ type = "markets" }) {
           <span
             key={i}
             style={{
-              fontSize: 13,
+              fontSize: 15,
               fontWeight: 700,
-              color: isDark ? "rgba(220,250,245,0.45)" : "rgba(4,46,42,0.60)",
+              color: isDark ? "rgba(220,250,245,0.55)" : "rgba(2,32,29,0.65)",
               whiteSpace: "nowrap",
               letterSpacing: "0.08em",
             }}
@@ -522,7 +571,7 @@ function Navigation({ onWaitlistClick }: { onWaitlistClick: () => void }) {
               href={href}
               style={{
                 color: c.textMuted,
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: 600,
                 textDecoration: "none",
                 transition: "color 0.25s",
@@ -558,12 +607,12 @@ function Navigation({ onWaitlistClick }: { onWaitlistClick: () => void }) {
           className="btn-primary"
           onClick={onWaitlistClick}
           style={{
-            padding: "11px 24px",
+            padding: "12px 26px",
             borderRadius: 10,
             background: `linear-gradient(135deg,${palette.teal.light},${palette.green.vibrant})`,
             color: isDark ? colors.dark.bg : "#042e2a",
             fontWeight: 800,
-            fontSize: 13,
+            fontSize: 15,
             cursor: "pointer",
             border: "none",
             fontFamily: "'Sora',sans-serif",
@@ -736,12 +785,12 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
   const inSt: React.CSSProperties = {
     flex: 1,
     minWidth: 175,
-    padding: compact ? "11px 13px" : "13px 16px",
+    padding: compact ? "12px 15px" : "14px 17px",
     borderRadius: 11,
     border: `1.5px solid ${c.border}`,
     background: isDark ? "rgba(20,184,166,0.05)" : "rgba(13,148,136,0.04)",
     color: c.text,
-    fontSize: compact ? 13 : 14.5,
+    fontSize: compact ? 15 : 16,
     outline: "none",
     fontFamily: "'Sora',sans-serif",
     transition: "border-color 0.18s,box-shadow 0.18s",
@@ -765,9 +814,9 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
             type="button"
             onClick={() => setRole(role === r ? "" : r)}
             style={{
-              padding: "5px 14px",
+              padding: "7px 16px",
               borderRadius: 100,
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: 700,
               fontFamily: "'Sora',sans-serif",
               cursor: "pointer",
@@ -837,12 +886,12 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
           disabled={status === "loading"}
           style={{
             flex: 1,
-            padding: compact ? "12px 18px" : "14px 26px",
+            padding: compact ? "13px 20px" : "15px 28px",
             borderRadius: 12,
             background: `linear-gradient(135deg,${palette.teal.light},${palette.green.vibrant})`,
             color: isDark ? colors.dark.bg : "#042e2a",
             fontWeight: 800,
-            fontSize: compact ? 14 : 15,
+            fontSize: compact ? 16 : 17,
             cursor: "pointer",
             border: "none",
             boxShadow: `0 6px 26px rgba(13,148,136,0.36)`,
@@ -857,7 +906,7 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
           type="button"
           onClick={() => setNote((n) => !n)}
           style={{
-            fontSize: 12,
+            fontSize: 14,
             color: c.textMuted2,
             background: "none",
             border: "none",
@@ -887,15 +936,15 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
       {note && (
         <div
           style={{
-            fontSize: 12,
+            fontSize: 14,
             color: c.textMuted,
             background: isDark
               ? "rgba(20,184,166,0.055)"
               : "rgba(13,148,136,0.05)",
-            padding: "10px 13px",
+            padding: "12px 15px",
             borderRadius: 10,
             border: `1px solid ${c.border}`,
-            lineHeight: 1.7,
+            lineHeight: 1.75,
           }}
         >
           📱{" "}
@@ -959,12 +1008,12 @@ function RoleSelector({
     <div style={{ marginBottom: 40 }}>
       <p
         style={{
-          fontSize: 12,
+          fontSize: 14,
           fontWeight: 800,
           letterSpacing: "0.16em",
-          color: palette.teal.light,
+          color: isDark ? palette.teal.light : "#0f766e",
           textTransform: "uppercase",
-          marginBottom: 24,
+          marginBottom: 26,
           textAlign: "center",
         }}
       >
@@ -972,6 +1021,7 @@ function RoleSelector({
       </p>
       <div
         className="roles-g"
+        data-anime
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3,1fr)",
@@ -984,6 +1034,7 @@ function RoleSelector({
           <div
             key={role.id}
             className={`role-card`}
+            data-stagger-child
             onClick={() => handleSelect(role.id || "")}
             style={{
               borderRadius: 22,
@@ -1068,10 +1119,10 @@ function RoleSelector({
             <div style={{ padding: "16px 17px 20px" }}>
               <h3
                 style={{
-                  fontSize: 17.5,
+                  fontSize: 20,
                   fontWeight: 900,
                   fontFamily: "'Playfair Display',serif",
-                  marginBottom: 4,
+                  marginBottom: 5,
                   color: sel === role.id ? role.color : c.text,
                 }}
               >
@@ -1079,11 +1130,11 @@ function RoleSelector({
               </h3>
               <p
                 style={{
-                  fontSize: 11.5,
+                  fontSize: 13.5,
                   fontWeight: 700,
                   color: role.accent,
                   letterSpacing: "0.06em",
-                  marginBottom: 8,
+                  marginBottom: 10,
                   textTransform: "uppercase",
                 }}
               >
@@ -1091,9 +1142,9 @@ function RoleSelector({
               </p>
               <p
                 style={{
-                  fontSize: 13.5,
+                  fontSize: 16,
                   color: c.textMuted,
-                  lineHeight: 1.68,
+                  lineHeight: 1.75,
                 }}
               >
                 {role.desc}
@@ -1183,11 +1234,11 @@ function Categories() {
         <p
           style={{
             textAlign: "center",
-            fontSize: 15.5,
+            fontSize: 18,
             color: colors[isDark ? "dark" : "light"].textMuted,
-            marginBottom: 48,
+            marginBottom: 52,
             maxWidth: 600,
-            margin: "0 auto 48px",
+            margin: "0 auto 52px",
             lineHeight: 1.8,
           }}
         >
@@ -1196,6 +1247,7 @@ function Categories() {
 
         <div
           className="cat-g"
+          data-anime
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(4,1fr)",
@@ -1206,6 +1258,7 @@ function Categories() {
             <div
               key={i}
               className="cat-tile"
+              data-stagger-child
               style={{
                 borderRadius: 16,
                 overflow: "hidden",
@@ -1246,9 +1299,9 @@ function Categories() {
               >
                 <p
                   style={{
-                    fontSize: 13.5,
+                    fontSize: 16,
                     fontWeight: 800,
-                    marginBottom: 3,
+                    marginBottom: 4,
                     letterSpacing: "-0.3px",
                   }}
                 >
@@ -1256,7 +1309,7 @@ function Categories() {
                 </p>
                 <p
                   style={{
-                    fontSize: 11.5,
+                    fontSize: 13.5,
                     color: colors[isDark ? "dark" : "light"].textMuted2,
                   }}
                 >
@@ -1327,6 +1380,7 @@ function HowItWorks() {
 
         <div
           className="steps-g"
+          data-anime
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(3,1fr)",
@@ -1337,6 +1391,7 @@ function HowItWorks() {
             <div
               key={step.num}
               className="step-card"
+              data-stagger-child
               style={{
                 borderRadius: 22,
                 overflow: "hidden",
@@ -1418,10 +1473,10 @@ function HowItWorks() {
               <div style={{ padding: "20px 22px 24px" }}>
                 <h3
                   style={{
-                    fontSize: 17,
+                    fontSize: 20,
                     fontWeight: 900,
                     fontFamily: "'Playfair Display',serif",
-                    marginBottom: 10,
+                    marginBottom: 12,
                     color: step.accent,
                   }}
                 >
@@ -1429,9 +1484,9 @@ function HowItWorks() {
                 </h3>
                 <p
                   style={{
-                    fontSize: 13.5,
+                    fontSize: 16,
                     color: c.textMuted,
-                    lineHeight: 1.75,
+                    lineHeight: 1.8,
                   }}
                 >
                   {step.desc}
@@ -1503,6 +1558,7 @@ function Trust() {
 
         <div
           className="trust-g"
+          data-anime
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(4,1fr)",
@@ -1513,6 +1569,7 @@ function Trust() {
             <div
               key={i}
               className="trust-card"
+              data-stagger-child
               style={{
                 padding: 22,
                 borderRadius: 18,
@@ -1530,12 +1587,12 @@ function Trust() {
                 e.currentTarget.style.borderColor = c.border;
               }}
             >
-              <div style={{ fontSize: 26, marginBottom: 12 }}>{f.icon}</div>
+              <div style={{ fontSize: 30, marginBottom: 14 }}>{f.icon}</div>
               <h3
                 style={{
-                  fontSize: 14,
+                  fontSize: 17,
                   fontWeight: 800,
-                  marginBottom: 8,
+                  marginBottom: 10,
                   letterSpacing: "-0.3px",
                 }}
               >
@@ -1543,9 +1600,9 @@ function Trust() {
               </h3>
               <p
                 style={{
-                  fontSize: 13,
+                  fontSize: 15,
                   color: c.textMuted,
-                  lineHeight: 1.72,
+                  lineHeight: 1.78,
                 }}
               >
                 {f.desc}
@@ -1607,11 +1664,12 @@ function FAQ() {
           Frequently Asked
         </h2>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div data-anime style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {items.map((item, i) => (
             <div
               key={i}
               className="faq-item"
+              data-stagger-child
               style={{
                 borderRadius: 14,
                 overflow: "hidden",
@@ -1638,7 +1696,7 @@ function FAQ() {
                 <span
                   className="faq-q"
                   style={{
-                    fontSize: 15,
+                    fontSize: 17.5,
                     fontWeight: 700,
                     textAlign: "left",
                     transition: "color 0.25s",
@@ -1648,7 +1706,7 @@ function FAQ() {
                 </span>
                 <span
                   style={{
-                    fontSize: 22,
+                    fontSize: 24,
                     color: palette.gold.main,
                     flexShrink: 0,
                     transition: "transform 0.3s",
@@ -1668,9 +1726,9 @@ function FAQ() {
                 >
                   <p
                     style={{
-                      fontSize: 14,
+                      fontSize: 16.5,
                       color: c.textMuted,
-                      lineHeight: 1.8,
+                      lineHeight: 1.85,
                     }}
                   >
                     {item.a}
@@ -1698,12 +1756,12 @@ function ContactForm() {
       setF((p) => ({ ...p, [k]: e.target.value }));
 
   const inSt: React.CSSProperties = {
-    padding: "12px 16px",
+    padding: "14px 17px",
     borderRadius: 11,
     border: `1.5px solid ${c.border}`,
     background: isDark ? "rgba(20,184,166,0.05)" : "rgba(13,148,136,0.04)",
     color: c.text,
-    fontSize: 14.5,
+    fontSize: 16,
     outline: "none",
     fontFamily: "'Sora',sans-serif",
     transition: "border-color 0.18s",
@@ -1804,7 +1862,7 @@ function ContactForm() {
           background: `linear-gradient(135deg,${palette.teal.light},${palette.green.vibrant})`,
           color: isDark ? colors.dark.bg : "#042e2a",
           fontWeight: 800,
-          fontSize: 14.5,
+          fontSize: 16.5,
           cursor: "pointer",
           border: "none",
           fontFamily: "'Sora',sans-serif",
@@ -2415,9 +2473,9 @@ function Footer({ onLinkClick }: { onLinkClick: (page: ModalPage) => void }) {
             <OFashLogo size={42} textSize={16} dark={isDark} />
             <p
               style={{
-                fontSize: 13.5,
+                fontSize: 15.5,
                 color: c.textMuted,
-                lineHeight: 1.82,
+                lineHeight: 1.85,
                 marginTop: 14,
                 maxWidth: 270,
               }}
@@ -2499,7 +2557,7 @@ function Footer({ onLinkClick }: { onLinkClick: (page: ModalPage) => void }) {
             <div key={col.title}>
               <p
                 style={{
-                  fontSize: 11,
+                  fontSize: 13,
                   fontWeight: 800,
                   letterSpacing: "0.16em",
                   color: c.textMuted2,
@@ -2510,7 +2568,7 @@ function Footer({ onLinkClick }: { onLinkClick: (page: ModalPage) => void }) {
                 {col.title}
               </p>
               <div
-                style={{ display: "flex", flexDirection: "column", gap: 11 }}
+                style={{ display: "flex", flexDirection: "column", gap: 12 }}
               >
                 {col.links.map(([label, page]) => (
                   <button
@@ -2522,7 +2580,7 @@ function Footer({ onLinkClick }: { onLinkClick: (page: ModalPage) => void }) {
                       background: "none",
                       border: "none",
                       padding: 0,
-                      fontSize: 13.5,
+                      fontSize: 15.5,
                       color: c.textMuted,
                       cursor: "pointer",
                       textAlign: "left",
@@ -2557,7 +2615,7 @@ function Footer({ onLinkClick }: { onLinkClick: (page: ModalPage) => void }) {
         >
           <p
             style={{
-              fontSize: 12,
+              fontSize: 14,
               color: c.textMuted2,
             }}
           >
@@ -2990,29 +3048,29 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 1000 }}>
         <div
+          data-hero-el
           style={{
             display: "inline-flex",
             alignItems: "center",
             gap: 9,
-            padding: "8px 18px",
+            padding: "9px 20px",
             borderRadius: 100,
             background: isDark
               ? "rgba(20,184,166,0.1)"
               : "rgba(13,148,136,0.08)",
             border: `1.5px solid ${palette.teal.light}`,
-            fontSize: 13,
-            color: palette.teal.lighter,
+            fontSize: 15,
+            color: isDark ? palette.teal.lighter : "#0f766e",
             fontWeight: 700,
-            marginBottom: 28,
+            marginBottom: 32,
             letterSpacing: "0.06em",
             backdropFilter: "blur(10px)",
-            animation: "slide-up 0.5s ease",
           }}
         >
           <span
             style={{
-              width: 7,
-              height: 7,
+              width: 8,
+              height: 8,
               borderRadius: "50%",
               background: palette.teal.light,
               display: "inline-block",
@@ -3023,15 +3081,15 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
         </div>
 
         <h1
+          data-hero-el
           style={{
             fontFamily: "'Playfair Display',serif",
-            fontSize: "clamp(42px,7vw,92px)",
+            fontSize: "clamp(44px,7vw,96px)",
             fontWeight: 900,
             lineHeight: 1.08,
             letterSpacing: "-2px",
-            marginBottom: 20,
+            marginBottom: 22,
             maxWidth: 1000,
-            animation: "slide-up 0.6s 0.1s ease both",
           }}
         >
           Africa&apos;s Fashion Market,
@@ -3044,14 +3102,14 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
         </h1>
 
         <h2
+          data-hero-el
           style={{
-            fontSize: "clamp(16px,2.2vw,24px)",
+            fontSize: "clamp(18px,2.4vw,27px)",
             fontWeight: 600,
             color: c.textMuted,
-            maxWidth: 620,
-            margin: "0 auto 14px",
-            lineHeight: 1.7,
-            animation: "slide-up 0.6s 0.2s ease both",
+            maxWidth: 640,
+            margin: "0 auto 18px",
+            lineHeight: 1.75,
           }}
         >
           Access Balogun, Onitsha, Dutse, and every fashion market without the
@@ -3059,13 +3117,13 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
         </h2>
 
         <p
+          data-hero-el
           style={{
-            fontSize: "clamp(14px,1.6vw,18px)",
+            fontSize: "clamp(16px,1.8vw,20px)",
             color: c.textMuted2,
             maxWidth: 580,
-            margin: "0 auto 16px",
-            lineHeight: 1.8,
-            animation: "slide-up 0.6s 0.28s ease both",
+            margin: "0 auto 22px",
+            lineHeight: 1.85,
           }}
         >
           Get items delivered within hours. Register free. Zero stress, pure
@@ -3073,25 +3131,25 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
         </p>
 
         <div
+          data-hero-el
           style={{
             display: "flex",
-            gap: 14,
+            gap: 16,
             flexWrap: "wrap",
             justifyContent: "center",
-            marginBottom: 60,
-            animation: "slide-up 0.6s 0.38s ease both",
+            marginBottom: 64,
           }}
         >
           <button
             className="btn-primary"
             onClick={onWaitlistClick}
             style={{
-              padding: "16px 36px",
+              padding: "18px 40px",
               borderRadius: 14,
               background: `linear-gradient(135deg,${palette.teal.light},${palette.green.vibrant})`,
               color: isDark ? colors.dark.bg : "#042e2a",
               fontWeight: 900,
-              fontSize: 16,
+              fontSize: 18,
               cursor: "pointer",
               border: "none",
               fontFamily: "'Sora',sans-serif",
@@ -3100,24 +3158,24 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
               willChange: "transform",
               display: "flex",
               alignItems: "center",
-              gap: 8,
+              gap: 10,
             }}
           >
-            Join Waitlist <ArrowRight size={18} />
+            Join Waitlist <ArrowRight size={20} />
           </button>
           <button
             onClick={onWaitlistClick}
             style={{
-              padding: "16px 32px",
+              padding: "18px 36px",
               borderRadius: 14,
               background: isDark
                 ? "rgba(245,158,11,0.12)"
                 : "rgba(245,158,11,0.1)",
               color: palette.gold.light,
               fontWeight: 800,
-              fontSize: 16,
+              fontSize: 18,
               cursor: "pointer",
-              border: `1.5px solid ${palette.gold.main}`,
+              border: `2px solid ${palette.gold.main}`,
               fontFamily: "'Sora',sans-serif",
               transition: "all 0.25s",
             }}
@@ -3137,24 +3195,24 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
         </div>
 
         <div
+          data-hero-el
           style={{
             display: "flex",
-            gap: 50,
+            gap: 56,
             flexWrap: "wrap",
             justifyContent: "center",
-            animation: "slide-up 0.6s 0.5s ease both",
           }}
         >
           {[
-            { value: "500+", label: "Vendors Ready" },
-            { value: "10K+", label: "Fashion Items" },
-            { value: "150+", label: "Bike Riders" },
-            { value: "FREE", label: "Registration" },
-          ].map(({ value, label }) => (
+            { num: 500, suffix: "+", label: "Vendors Ready" },
+            { num: 10, suffix: "K+", label: "Fashion Items" },
+            { num: 150, suffix: "+", label: "Bike Riders" },
+            { num: null, suffix: "FREE", label: "Registration" },
+          ].map(({ num, suffix, label }) => (
             <div key={label} style={{ textAlign: "center" }}>
               <div
                 style={{
-                  fontSize: 32,
+                  fontSize: 38,
                   fontWeight: 900,
                   fontFamily: "'Playfair Display',serif",
                   background: `linear-gradient(135deg,${palette.teal.lighter},${palette.gold.light})`,
@@ -3163,15 +3221,19 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
                   letterSpacing: "-1px",
                 }}
               >
-                {value}
+                {num !== null ? (
+                  <Counter target={num} suffix={suffix} />
+                ) : (
+                  suffix
+                )}
               </div>
               <div
                 style={{
-                  fontSize: 11.5,
+                  fontSize: 13,
                   color: c.textMuted2,
-                  marginTop: 6,
+                  marginTop: 7,
                   fontWeight: 700,
-                  letterSpacing: "0.1em",
+                  letterSpacing: "0.12em",
                   textTransform: "uppercase",
                 }}
               >
@@ -3203,11 +3265,11 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
             boxShadow: `0 8px 24px rgba(13,148,136,0.15)`,
           }}
         >
-          <span style={{ fontSize: 22 }}>🚀</span>
+          <span style={{ fontSize: 24 }}>🚀</span>
           <div>
             <p
               style={{
-                fontSize: 12,
+                fontSize: 14,
                 fontWeight: 800,
                 color: isDark ? palette.teal.lighter : "#0f766e",
                 margin: 0,
@@ -3215,7 +3277,7 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
             >
               Launching Soon
             </p>
-            <p style={{ fontSize: 11, color: c.textMuted2, margin: 0 }}>
+            <p style={{ fontSize: 13, color: c.textMuted2, margin: 0 }}>
               Be first notified
             </p>
           </div>
@@ -3370,6 +3432,61 @@ function AppContent() {
     return () => clearTimeout(t);
   }, []);
 
+  // ── Anime.js scroll-reveal (fires after loader exits) ──
+  useEffect(() => {
+    if (isLoading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const el = entry.target as HTMLElement;
+          const children = Array.from(
+            el.querySelectorAll<HTMLElement>("[data-stagger-child]")
+          );
+
+          if (children.length > 0) {
+            animate(children, {
+              opacity: [0, 1],
+              translateY: [50, 0],
+              scale: [0.93, 1],
+              duration: 900,
+              delay: stagger(110),
+              ease: "outExpo",
+            });
+          } else {
+            animate(el, {
+              opacity: [0, 1],
+              translateY: [38, 0],
+              duration: 820,
+              ease: "outExpo",
+            });
+          }
+          observer.unobserve(el);
+        });
+      },
+      { threshold: 0.06, rootMargin: "0px 0px -36px 0px" }
+    );
+
+    document.querySelectorAll("[data-anime]").forEach((el) => {
+      observer.observe(el);
+    });
+
+    // Hero entrance timeline (plays after loader)
+    const heroEls = document.querySelectorAll<HTMLElement>("[data-hero-el]");
+    if (heroEls.length > 0) {
+      animate(Array.from(heroEls), {
+        opacity: [0, 1],
+        translateY: [24, 0],
+        duration: 700,
+        delay: stagger(120, { start: 80 }),
+        ease: "outExpo",
+      });
+    }
+
+    return () => observer.disconnect();
+  }, [isLoading]);
+
   const handleWaitlistClick = () => setCurrentPage("waitlist");
   const handleBackHome = () => setCurrentPage("home");
   const openModal = useCallback((p: ModalPage) => setModal(p), []);
@@ -3407,10 +3524,10 @@ function AppContent() {
               </h2>
               <p
                 style={{
-                  fontSize: 15.5,
+                  fontSize: 18,
                   color: c.textMuted,
                   maxWidth: 600,
-                  margin: "0 auto 48px",
+                  margin: "0 auto 52px",
                   lineHeight: 1.8,
                 }}
               >
@@ -3452,10 +3569,10 @@ function AppContent() {
               </h2>
               <p
                 style={{
-                  fontSize: 15,
+                  fontSize: 17,
                   color: c.textMuted,
-                  lineHeight: 1.8,
-                  marginBottom: 24,
+                  lineHeight: 1.85,
+                  marginBottom: 28,
                 }}
               >
                 Tell us what features you&apos;d like us to add, or any
