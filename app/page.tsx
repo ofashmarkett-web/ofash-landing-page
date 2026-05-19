@@ -108,20 +108,37 @@ const palette = {
 
 const IMG = {
   heroMarket: "/images/heroMarket.png",
-  clothesMen: "/images/clotheMen.png",
+  menAgbada: "/images/menAgbada.png",
+  menSuit: "/images/menSuit.png",
+  clotheMen: "/images/clotheMen.png",
   clothesWomen: "/images/clotheWomen.png",
+  skirts: "/images/skirts.png",
+  blouse: "/images/blouse.png",
   shoes: "/images/shoe.png",
+  shoe1: "/images/shoe1.png",
+  shoe2: "/images/shoe2.png",
   wigs: "/images/wig.png",
-  bags: "/images/bag.png",
-  fabric: "/images/fabrics.png",
+  wig1: "/images/wig1.png",
+  wig2: "/images/wig2.png",
+  bags: "/images/bags.png",
+  bags1: "/images/bags1.png",
+  bags2: "/images/bags2.png",
+  asooke: "/images/asooke.png",
+  lace: "/images/lace.png",
+  ankara: "/images/ankara.png",
   riderBike: "/images/riderBike.png",
+  rider1: "/images/rider1.png",
+  rider2: "/images/rider2.png",
   marketScene: "/images/marketScene.png",
   vendor1: "/images/vendor1.png",
   vendor2: "/images/vendor2.png",
+  vendor3: "/images/vendor3.png",
   market2: "/images/market2.png",
   africanFashion: "/images/africanFashion.png",
   couple: "/images/couple.png",
   perfume: "/images/perfume.png",
+  perfume1: "/images/perfume1.png",
+  perfume2: "/images/perfume2.png",
 };
 
 type ModalPage = "privacy" | "terms" | "contact" | "cookies" | null;
@@ -300,7 +317,7 @@ function Counter({
           obs.disconnect();
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.5 },
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -524,6 +541,76 @@ function Marquee({ type = "markets" }) {
   );
 }
 
+// ────── STICKY MARQUEE (always visible, fixed below nav) ──────
+function StickyMarquee() {
+  const { isDark } = useTheme();
+  const c = colors[isDark ? "dark" : "light"];
+
+  const items = [
+    "🏪 Balogun Market",
+    "🏬 Onitsha Central",
+    "🛍 Dutse Fashion Hub",
+    "🏪 Ariaria Market",
+    "🏬 Kano Textiles",
+    "🛍 Yaba Fashion",
+    "🏪 Aba Market",
+    "🏬 Idumota Lagos",
+    "🛍 Trade Fair Complex",
+    "🏪 Balogun Market",
+    "🏬 Onitsha Central",
+    "🛍 Dutse Fashion Hub",
+    "🏪 Ariaria Market",
+    "🏬 Kano Textiles",
+    "🛍 Yaba Fashion",
+    "🏪 Aba Market",
+    "🏬 Idumota Lagos",
+    "🛍 Trade Fair Complex",
+  ];
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 74,
+        left: 0,
+        right: 0,
+        zIndex: 180,
+        overflow: "hidden",
+        borderBottom: `1px solid ${c.border}`,
+        background: isDark ? "rgba(5,12,11,0.94)" : "rgba(243,249,247,0.95)",
+        backdropFilter: "blur(18px) saturate(150%)",
+        WebkitBackdropFilter: "blur(18px) saturate(150%)",
+        padding: "7px 0",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          gap: 60,
+          width: "max-content",
+          animation: "marquee 46s linear infinite",
+          willChange: "transform",
+        }}
+      >
+        {items.map((item, i) => (
+          <span
+            key={i}
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: isDark ? "rgba(220,250,245,0.58)" : "rgba(2,32,29,0.62)",
+              whiteSpace: "nowrap",
+              letterSpacing: "0.08em",
+            }}
+          >
+            {item}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ────── NAVIGATION ──────
 function Navigation({ onWaitlistClick }: { onWaitlistClick: () => void }) {
   const { isDark, toggleTheme } = useTheme();
@@ -583,7 +670,26 @@ function Navigation({ onWaitlistClick }: { onWaitlistClick: () => void }) {
         ))}
       </ul>
 
-      <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <span
+          className="nav-links"
+          style={{
+            fontSize: 11.5,
+            fontWeight: 700,
+            color: isDark ? "rgba(220,250,245,0.50)" : "rgba(2,32,29,0.55)",
+            letterSpacing: "0.05em",
+            whiteSpace: "nowrap",
+            padding: "5px 12px",
+            borderRadius: 100,
+            border: `1px solid ${c.border}`,
+            background: c.bgAlt,
+            cursor: "pointer",
+          }}
+          onClick={toggleTheme}
+          title="Click to switch theme"
+        >
+          {isDark ? "🌙 Dark mode" : "☀️ Light mode"} · tap to switch
+        </span>
         <button
           onClick={toggleTheme}
           style={{
@@ -599,7 +705,7 @@ function Navigation({ onWaitlistClick }: { onWaitlistClick: () => void }) {
             fontSize: 20,
             transition: "all 0.25s",
           }}
-          title={isDark ? "Light mode" : "Dark mode"}
+          title={isDark ? "Switch to light mode" : "Switch to dark mode"}
         >
           {isDark ? "☀️" : "🌙"}
         </button>
@@ -833,7 +939,12 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
                 role === r
                   ? `1.5px solid ${palette.teal.light}`
                   : `1.5px solid ${c.border}`,
-              color: role === r ? (isDark ? palette.teal.lighter : "#0f766e") : c.textMuted2,
+              color:
+                role === r
+                  ? isDark
+                    ? palette.teal.lighter
+                    : "#0f766e"
+                  : c.textMuted2,
             }}
           >
             {r === "buyer"
@@ -1078,9 +1189,8 @@ function RoleSelector({
                 style={{
                   position: "absolute",
                   inset: 0,
-                  background: isDark
-                    ? "linear-gradient(to top,rgba(5,12,11,0.96) 0%,rgba(5,12,11,0.08) 60%)"
-                    : "linear-gradient(to top,rgba(248,253,251,0.92) 0%,rgba(248,253,251,0.05) 60%)",
+                  background:
+                    "linear-gradient(to top,rgba(2,18,16,0.92) 0%,rgba(2,18,16,0.08) 60%)",
                 }}
               />
               <div
@@ -1174,37 +1284,91 @@ function RoleSelector({
   );
 }
 
+// ────── CATEGORY IMAGE CAROUSEL ──────
+function CategoryCarousel({
+  images,
+  label,
+}: {
+  images: string[];
+  label: string;
+}) {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % images.length);
+    }, 9000);
+    return () => clearInterval(id);
+  }, [images.length]);
+
+  return (
+    <>
+      {images.map((src, i) => (
+        <Image
+          key={i}
+          src={src}
+          alt={i === 0 ? label : ""}
+          fill
+          sizes="(max-width: 600px) 50vw, (max-width: 960px) 25vw, 275px"
+          style={{
+            objectFit: "contain",
+            objectPosition: "center",
+            opacity: i === current ? 1 : 0,
+            transition: "opacity 1.2s ease-in-out",
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
 // ────── CATEGORIES ──────
 function Categories() {
   const { isDark } = useTheme();
 
   const items = [
     {
-      img: IMG.clothesMen,
+      imgs: [IMG.clotheMen, IMG.menAgbada, IMG.menSuit],
       label: "Men's Fashion",
       desc: "Agbada, shirts, suits",
     },
     {
-      img: IMG.clothesWomen,
+      imgs: [IMG.clothesWomen, IMG.skirts, IMG.blouse],
       label: "Women's Fashion",
       desc: "Dresses, blouses, skirts",
     },
     {
-      img: IMG.shoes,
+      imgs: [IMG.shoes, IMG.shoe1, IMG.shoe2],
       label: "Shoes & Footwear",
       desc: "All styles, all genders",
     },
-    { img: IMG.wigs, label: "Wigs & Hair", desc: "Human hair & synthetics" },
-    { img: IMG.bags, label: "Bags & Purses", desc: "Leather & designer" },
     {
-      img: IMG.fabric,
+      imgs: [IMG.wigs, IMG.wig1, IMG.wig2],
+      label: "Wigs & Hair",
+      desc: "Human hair & synthetics",
+    },
+    {
+      imgs: [IMG.bags, IMG.bags1, IMG.bags2],
+      label: "Bags & Purses",
+      desc: "Leather & designer",
+    },
+    {
+      imgs: [IMG.asooke, IMG.lace, IMG.ankara],
       label: "Fabrics & Textiles",
       desc: "Ankara, lace, aso-oke",
     },
-    { img: IMG.vendor2, label: "Verified Vendors", desc: "Trusted sellers" },
-    { img: IMG.riderBike, label: "Fast Delivery", desc: "30 min – 1 hour" },
     {
-      img: IMG.perfume,
+      imgs: [IMG.vendor2, IMG.vendor1, IMG.vendor3],
+      label: "Verified Vendors",
+      desc: "Trusted sellers",
+    },
+    {
+      imgs: [IMG.riderBike, IMG.rider1, IMG.rider2],
+      label: "Fast Delivery",
+      desc: "30 min – 1 hour",
+    },
+    {
+      imgs: [IMG.perfume, IMG.perfume1, IMG.perfume2],
       label: "Perfume and Scents",
       desc: "Fragrances for every occasion",
     },
@@ -1270,23 +1434,16 @@ function Categories() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "rgba(0,0,0,0.02)",
+                backgroundColor: "rgba(0,0,0,0.12)",
               }}
             >
-              <Image
-                src={item.img}
-                alt={item.label}
-                fill
-                sizes="(max-width: 600px) 50vw, (max-width: 960px) 25vw, 275px"
-                style={{ objectFit: "contain", objectPosition: "center" }}
-              />
+              <CategoryCarousel images={item.imgs} label={item.label} />
               <div
                 style={{
                   position: "absolute",
                   inset: 0,
-                  background: isDark
-                    ? "linear-gradient(to top,rgba(5,12,11,0.97) 0%,rgba(5,12,11,0.06) 55%)"
-                    : "linear-gradient(to top,rgba(248,253,251,0.94) 0%,rgba(248,253,251,0.04) 55%)",
+                  background:
+                    "linear-gradient(to top,rgba(2,18,16,0.92) 0%,rgba(2,18,16,0.06) 58%)",
                 }}
               />
               <div
@@ -1303,6 +1460,7 @@ function Categories() {
                     fontWeight: 800,
                     marginBottom: 4,
                     letterSpacing: "-0.3px",
+                    color: "#edfaf7",
                   }}
                 >
                   {item.label}
@@ -1310,7 +1468,7 @@ function Categories() {
                 <p
                   style={{
                     fontSize: 13.5,
-                    color: colors[isDark ? "dark" : "light"].textMuted2,
+                    color: "rgba(220,250,245,0.70)",
                   }}
                 >
                   {item.desc}
@@ -1433,9 +1591,8 @@ function HowItWorks() {
                   style={{
                     position: "absolute",
                     inset: 0,
-                    background: isDark
-                      ? "linear-gradient(to top,rgba(5,12,11,0.95) 0%,rgba(5,12,11,0.2) 65%)"
-                      : "linear-gradient(to top,rgba(248,253,251,0.93) 0%,rgba(248,253,251,0.1) 65%)",
+                    background:
+                      "linear-gradient(to top,rgba(2,18,16,0.90) 0%,rgba(2,18,16,0.18) 65%)",
                   }}
                 />
                 <div
@@ -1459,7 +1616,7 @@ function HowItWorks() {
                     width: 44,
                     height: 44,
                     borderRadius: 12,
-                    background: isDark ? "rgba(5,12,11,0.85)" : c.bg,
+                    background: "rgba(5,12,11,0.80)",
                     border: `1.5px solid ${c.borderLight}`,
                     display: "flex",
                     alignItems: "center",
@@ -1664,7 +1821,10 @@ function FAQ() {
           Frequently Asked
         </h2>
 
-        <div data-anime style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div
+          data-anime
+          style={{ display: "flex", flexDirection: "column", gap: 12 }}
+        >
           {items.map((item, i) => (
             <div
               key={i}
@@ -1772,7 +1932,11 @@ function ContactForm() {
       <div style={{ textAlign: "center", padding: 30 }}>
         <div style={{ fontSize: 38, marginBottom: 11 }}>✅</div>
         <p
-          style={{ color: isDark ? palette.teal.lighter : "#0f766e", fontWeight: 700, fontSize: 15 }}
+          style={{
+            color: isDark ? palette.teal.lighter : "#0f766e",
+            fontWeight: 700,
+            fontSize: 15,
+          }}
         >
           Message sent!
         </p>
@@ -2872,7 +3036,12 @@ function WaitlistPage({ onBack }: { onBack: () => void }) {
                       ? "rgba(13,148,136,0.2)"
                       : "rgba(13,148,136,0.08)",
                   border: `1.5px solid ${role === r ? palette.teal.light : c.border}`,
-                  color: role === r ? (isDark ? palette.teal.lighter : "#0f766e") : c.textMuted2,
+                  color:
+                    role === r
+                      ? isDark
+                        ? palette.teal.lighter
+                        : "#0f766e"
+                      : c.textMuted2,
                   transition: "all 0.25s",
                 }}
               >
@@ -3016,7 +3185,7 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
         padding: "180px 24px 100px",
         position: "relative",
         overflow: "hidden",
-        marginTop: 60,
+        marginTop: 110,
       }}
     >
       <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
@@ -3039,7 +3208,7 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
             inset: 0,
             background: isDark
               ? "linear-gradient(to bottom,rgba(5,12,11,0.3) 0%,rgba(5,12,11,0.7) 50%,rgba(5,12,11,0.98) 100%)"
-              : "linear-gradient(to bottom,rgba(248,253,251,0.2) 0%,rgba(248,253,251,0.5) 50%,rgba(248,253,251,0.95) 100%)",
+              : "linear-gradient(to bottom,rgba(243,249,247,0.15) 0%,rgba(243,249,247,0.45) 50%,rgba(243,249,247,0.88) 100%)",
           }}
         />
       </div>
@@ -3442,7 +3611,7 @@ function AppContent() {
           if (!entry.isIntersecting) return;
           const el = entry.target as HTMLElement;
           const children = Array.from(
-            el.querySelectorAll<HTMLElement>("[data-stagger-child]")
+            el.querySelectorAll<HTMLElement>("[data-stagger-child]"),
           );
 
           if (children.length > 0) {
@@ -3465,7 +3634,7 @@ function AppContent() {
           observer.unobserve(el);
         });
       },
-      { threshold: 0.06, rootMargin: "0px 0px -36px 0px" }
+      { threshold: 0.06, rootMargin: "0px 0px -36px 0px" },
     );
 
     document.querySelectorAll("[data-anime]").forEach((el) => {
@@ -3497,6 +3666,7 @@ function AppContent() {
       <PageLoader isVisible={isLoading} />
       <GlobalStyles />
       <Spotlight />
+      <StickyMarquee />
 
       {currentPage === "home" ? (
         <>
