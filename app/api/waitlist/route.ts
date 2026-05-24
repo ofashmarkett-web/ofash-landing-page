@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
     const email: string = (body.email ?? "").trim().toLowerCase();
     const whatsapp: string = (body.whatsapp ?? "").trim();
     const role: string = (body.role ?? "").trim();
+    const businessName: string = (body.businessName ?? "").trim();
 
     // Validate email
     if (!email || !email.includes("@")) {
@@ -127,6 +128,14 @@ export async function POST(req: NextRequest) {
           <div class="info-label">👤 Registration Role</div>
           <div class="info-value">${role ? role.charAt(0).toUpperCase() + role.slice(1) : "Not specified"}</div>
         </div>
+        ${
+          businessName
+            ? `<div class="info-row">
+          <div class="info-label">${role === "rider" ? "🛵 Delivery Business Name" : "🏪 Business / Shop Name"}</div>
+          <div class="info-value">${businessName}</div>
+        </div>`
+            : ""
+        }
         ${
           hasWhatsApp
             ? `<div class="info-row">
@@ -233,7 +242,7 @@ export async function POST(req: NextRequest) {
       .send({
         from: FROM,
         to: TEAM_EMAIL,
-        subject: `🆕 New Waitlist Signup: ${email} (${role || "unspecified"})`,
+        subject: `🆕 New Waitlist Signup: ${email} (${role || "unspecified"}${businessName ? ` · ${businessName}` : ""})`,
         html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fdfb; padding: 30px; border-radius: 10px;">
           <h2 style="color: #0d9488; font-size: 24px; margin-bottom: 20px;">🔔 New Waitlist Registration</h2>
@@ -245,6 +254,13 @@ export async function POST(req: NextRequest) {
             <p style="margin: 10px 0; font-size: 16px; color: #042e2a;">
               <strong>Role:</strong> ${role ? role.charAt(0).toUpperCase() + role.slice(1) : "Not specified"}
             </p>
+            ${
+              businessName
+                ? `<p style="margin: 10px 0; font-size: 16px; color: #042e2a;">
+              <strong>${role === "rider" ? "Delivery Business" : "Business / Shop"}:</strong> ${businessName}
+            </p>`
+                : ""
+            }
             ${
               hasWhatsApp
                 ? `<p style="margin: 10px 0; font-size: 16px; color: #042e2a;">

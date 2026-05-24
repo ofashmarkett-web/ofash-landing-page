@@ -12,15 +12,7 @@ import {
   type MouseEvent,
   type FormEvent,
 } from "react";
-import {
-  Menu,
-  X,
-  ArrowRight,
-  Share2,
-  Globe,
-  AtSign,
-  Video,
-} from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { animate, stagger } from "animejs";
 
 // ────── THEME CONTEXT ──────
@@ -141,7 +133,7 @@ const IMG = {
   perfume2: "/images/perfume2.png",
 };
 
-type ModalPage = "privacy" | "terms" | "contact" | "cookies" | null;
+type ModalPage = "privacy" | "terms" | "contact" | "cookies" | "about" | null;
 type UserRole = "buyer" | "vendor" | "rider" | null;
 
 function GlobalStyles() {
@@ -612,137 +604,297 @@ function StickyMarquee() {
 }
 
 // ────── NAVIGATION ──────
-function Navigation({ onWaitlistClick }: { onWaitlistClick: () => void }) {
+function Navigation({
+  onWaitlistClick,
+  onOpenModal,
+}: {
+  onWaitlistClick: () => void;
+  onOpenModal: (page: ModalPage) => void;
+}) {
   const { isDark, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const c = colors[isDark ? "dark" : "light"];
 
-  return (
-    <nav
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 200,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "16px 32px",
-        borderBottom: `1px solid ${c.border}`,
-        backdropFilter: "blur(28px) saturate(160%)",
-        background: isDark ? "rgba(5,12,11,0.88)" : "rgba(248,253,251,0.88)",
-        transition: "all 0.35s",
-      }}
-    >
-      <OFashLogo size={40} textSize={14} dark={isDark} />
+  const closeMobile = () => setMobileOpen(false);
 
-      <ul
-        className="nav-links"
+  return (
+    <>
+      <nav
         style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 200,
           display: "flex",
-          gap: 32,
-          listStyle: "none",
-          margin: 0,
-          padding: 0,
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "16px 32px",
+          borderBottom: `1px solid ${c.border}`,
+          backdropFilter: "blur(28px) saturate(160%)",
+          background: isDark ? "rgba(5,12,11,0.88)" : "rgba(248,253,251,0.88)",
+          transition: "all 0.35s",
         }}
       >
-        {[
-          ["How It Works", "#how-it-works"],
-          ["Who We Serve", "#who-we-serve"],
-          ["Categories", "#categories"],
-          ["FAQ", "#faq"],
-        ].map(([label, href]) => (
-          <li key={label}>
+        <OFashLogo size={40} textSize={14} dark={isDark} />
+
+        <ul
+          className="nav-links"
+          style={{
+            display: "flex",
+            gap: 32,
+            listStyle: "none",
+            margin: 0,
+            padding: 0,
+          }}
+        >
+          {[
+            ["How It Works", "#how-it-works"],
+            ["Who We Serve", "#who-we-serve"],
+            ["Categories", "#categories"],
+            ["FAQ", "#faq"],
+          ].map(([label, href]) => (
+            <li key={label}>
+              <a
+                href={href}
+                style={{
+                  color: c.textMuted,
+                  fontSize: 16,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  transition: "color 0.25s",
+                }}
+              >
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <span
+            className="nav-links"
+            style={{
+              fontSize: 11.5,
+              fontWeight: 700,
+              color: isDark ? "rgba(220,250,245,0.50)" : "rgba(2,32,29,0.55)",
+              letterSpacing: "0.05em",
+              whiteSpace: "nowrap",
+              padding: "5px 12px",
+              borderRadius: 100,
+              border: `1px solid ${c.border}`,
+              background: c.bgAlt,
+              cursor: "pointer",
+            }}
+            onClick={toggleTheme}
+            title="Click to switch theme"
+          >
+            {isDark ? "🌙 Dark mode" : "☀️ Light mode"} · tap to switch
+          </span>
+          <button
+            onClick={toggleTheme}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 10,
+              background: c.bgAlt,
+              border: `1px solid ${c.border}`,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 20,
+              transition: "all 0.25s",
+            }}
+            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {isDark ? "☀️" : "🌙"}
+          </button>
+          <button
+            className="btn-primary"
+            onClick={onWaitlistClick}
+            style={{
+              padding: "12px 26px",
+              borderRadius: 10,
+              background: `linear-gradient(135deg,${palette.teal.light},${palette.green.vibrant})`,
+              color: isDark ? colors.dark.bg : "#042e2a",
+              fontWeight: 800,
+              fontSize: 15,
+              cursor: "pointer",
+              border: "none",
+              fontFamily: "'Sora',sans-serif",
+              boxShadow: `0 6px 20px rgba(13,148,136,0.35)`,
+              transition: "transform 0.15s,box-shadow 0.25s",
+              willChange: "transform",
+            }}
+          >
+            Join Waitlist
+          </button>
+          <button
+            className="mobile-menu"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: c.text,
+              padding: 4,
+            }}
+          >
+            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </nav>
+
+      {/* ── Mobile dropdown menu ── */}
+      {mobileOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 74,
+            left: 0,
+            right: 0,
+            zIndex: 210,
+            background: isDark
+              ? "rgba(5,12,11,0.97)"
+              : "rgba(243,249,247,0.98)",
+            backdropFilter: "blur(26px) saturate(160%)",
+            WebkitBackdropFilter: "blur(26px) saturate(160%)",
+            borderBottom: `1px solid ${c.border}`,
+            padding: "6px 0 18px",
+            display: "flex",
+            flexDirection: "column",
+            animation: "slide-up 0.22s ease",
+          }}
+        >
+          {/* Page navigation links */}
+          {[
+            ["How It Works", "#how-it-works"],
+            ["Who We Serve", "#who-we-serve"],
+            ["Categories", "#categories"],
+            ["FAQ", "#faq"],
+          ].map(([label, href]) => (
             <a
+              key={label}
               href={href}
+              onClick={closeMobile}
               style={{
+                padding: "13px 28px",
                 color: c.textMuted,
                 fontSize: 16,
                 fontWeight: 600,
                 textDecoration: "none",
-                transition: "color 0.25s",
+                borderBottom: `1px solid ${c.border}`,
+                transition: "background 0.15s",
               }}
             >
               {label}
             </a>
-          </li>
-        ))}
-      </ul>
+          ))}
 
-      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <span
-          className="nav-links"
-          style={{
-            fontSize: 11.5,
-            fontWeight: 700,
-            color: isDark ? "rgba(220,250,245,0.50)" : "rgba(2,32,29,0.55)",
-            letterSpacing: "0.05em",
-            whiteSpace: "nowrap",
-            padding: "5px 12px",
-            borderRadius: 100,
-            border: `1px solid ${c.border}`,
-            background: c.bgAlt,
-            cursor: "pointer",
-          }}
-          onClick={toggleTheme}
-          title="Click to switch theme"
-        >
-          {isDark ? "🌙 Dark mode" : "☀️ Light mode"} · tap to switch
-        </span>
-        <button
-          onClick={toggleTheme}
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 10,
-            background: c.bgAlt,
-            border: `1px solid ${c.border}`,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 20,
-            transition: "all 0.25s",
-          }}
-          title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-        >
-          {isDark ? "☀️" : "🌙"}
-        </button>
-        <button
-          className="btn-primary"
-          onClick={onWaitlistClick}
-          style={{
-            padding: "12px 26px",
-            borderRadius: 10,
-            background: `linear-gradient(135deg,${palette.teal.light},${palette.green.vibrant})`,
-            color: isDark ? colors.dark.bg : "#042e2a",
-            fontWeight: 800,
-            fontSize: 15,
-            cursor: "pointer",
-            border: "none",
-            fontFamily: "'Sora',sans-serif",
-            boxShadow: `0 6px 20px rgba(13,148,136,0.35)`,
-            transition: "transform 0.15s,box-shadow 0.25s",
-            willChange: "transform",
-          }}
-        >
-          Join Waitlist
-        </button>
-        <button
-          className="mobile-menu"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: c.text,
-          }}
-        >
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-    </nav>
+          {/* Divider label */}
+          <p
+            style={{
+              padding: "14px 28px 6px",
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: c.textMuted2,
+            }}
+          >
+            Company
+          </p>
+
+          {/* Modal links */}
+          {(
+            [
+              ["📖 About Us", "about"],
+              ["✉️ Contact Us", "contact"],
+              ["🔒 Privacy Policy", "privacy"],
+            ] as [string, ModalPage][]
+          ).map(([label, page]) => (
+            <button
+              key={label}
+              onClick={() => {
+                closeMobile();
+                onOpenModal(page);
+              }}
+              style={{
+                padding: "13px 28px",
+                background: "none",
+                border: "none",
+                borderBottom: `1px solid ${c.border}`,
+                cursor: "pointer",
+                textAlign: "left",
+                color: c.textMuted,
+                fontSize: 16,
+                fontWeight: 600,
+                fontFamily: "'Sora',sans-serif",
+                transition: "background 0.15s",
+              }}
+            >
+              {label}
+            </button>
+          ))}
+
+          {/* Join Waitlist CTA */}
+          <div style={{ padding: "16px 28px 0" }}>
+            <button
+              onClick={() => {
+                closeMobile();
+                onWaitlistClick();
+              }}
+              style={{
+                width: "100%",
+                padding: "14px",
+                borderRadius: 12,
+                background: `linear-gradient(135deg,${palette.teal.light},${palette.green.vibrant})`,
+                color: isDark ? colors.dark.bg : "#042e2a",
+                fontWeight: 800,
+                fontSize: 16,
+                cursor: "pointer",
+                border: "none",
+                fontFamily: "'Sora',sans-serif",
+                boxShadow: "0 6px 20px rgba(13,148,136,0.35)",
+              }}
+            >
+              Join Waitlist →
+            </button>
+          </div>
+
+          {/* Theme toggle row */}
+          <div
+            style={{
+              padding: "14px 28px 0",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <button
+              onClick={toggleTheme}
+              style={{
+                padding: "10px 18px",
+                borderRadius: 10,
+                background: c.bgAlt,
+                border: `1px solid ${c.border}`,
+                cursor: "pointer",
+                fontSize: 14,
+                fontWeight: 700,
+                color: c.textMuted,
+                fontFamily: "'Sora',sans-serif",
+                display: "flex",
+                alignItems: "center",
+                gap: 7,
+              }}
+            >
+              {isDark ? "☀️ Switch to Light" : "🌙 Switch to Dark"}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -753,6 +905,7 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
   const [email, setEmail] = useState("");
   const [wa, setWa] = useState("");
   const [role, setRole] = useState<"" | "buyer" | "vendor" | "rider">("");
+  const [businessName, setBusinessName] = useState("");
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
@@ -775,6 +928,8 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
           email: email.toLowerCase(),
           whatsapp: wa,
           role,
+          businessName:
+            role === "vendor" || role === "rider" ? businessName : undefined,
         }),
       });
       const data = await res.json();
@@ -790,7 +945,7 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
       setRole("");
     } catch {
       setStatus("error");
-      setErrMsg("Network error — please check your connection.");
+      setErrMsg("Network error please check your connection.");
     }
   };
 
@@ -832,7 +987,7 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
             lineHeight: 1.72,
           }}
         >
-          Check your inbox — confirmation sent! We&apos;ll notify you the moment
+          Check your inbox confirmation sent! We&apos;ll notify you the moment
           we launch.
         </p>
       </div>
@@ -914,46 +1069,46 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
       }}
     >
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {(["buyer", "vendor", "rider"] as const).map((r) => (
-          <button
-            key={r}
-            type="button"
-            onClick={() => setRole(role === r ? "" : r)}
-            style={{
-              padding: "7px 16px",
-              borderRadius: 100,
-              fontSize: 14,
-              fontWeight: 700,
-              fontFamily: "'Sora',sans-serif",
-              cursor: "pointer",
-              transition: "all 0.17s",
-              background:
-                role === r
-                  ? isDark
-                    ? "rgba(20,184,166,0.18)"
-                    : "rgba(13,148,136,0.15)"
+        {(["buyer", "vendor", "rider"] as const).map((r) => {
+          const sel = role === r;
+          return (
+            <button
+              key={r}
+              type="button"
+              onClick={() => {
+                setRole(sel ? "" : r);
+                setBusinessName("");
+              }}
+              style={{
+                padding: "8px 18px",
+                borderRadius: 100,
+                fontSize: 14,
+                fontWeight: 800,
+                fontFamily: "'Sora',sans-serif",
+                cursor: "pointer",
+                transition: "all 0.18s",
+                background: sel
+                  ? `linear-gradient(135deg,${palette.teal.light},${palette.green.vibrant})`
                   : isDark
-                    ? "rgba(20,184,166,0.055)"
-                    : "rgba(13,148,136,0.05)",
-              border:
-                role === r
-                  ? `1.5px solid ${palette.teal.light}`
+                    ? "rgba(20,184,166,0.06)"
+                    : "rgba(13,148,136,0.06)",
+                border: sel
+                  ? "1.5px solid transparent"
                   : `1.5px solid ${c.border}`,
-              color:
-                role === r
-                  ? isDark
-                    ? palette.teal.lighter
-                    : "#0f766e"
-                  : c.textMuted2,
-            }}
-          >
-            {r === "buyer"
-              ? "🛍 Buyer"
-              : r === "vendor"
-                ? "🏪 Vendor"
-                : "🛵 Rider"}
-          </button>
-        ))}
+                color: sel ? "#fff" : c.textMuted2,
+                boxShadow: sel ? "0 4px 14px rgba(13,148,136,0.35)" : "none",
+                transform: sel ? "scale(1.04)" : "scale(1)",
+              }}
+            >
+              {sel ? "✓ " : ""}
+              {r === "buyer"
+                ? "🛍 Buyer"
+                : r === "vendor"
+                  ? "🏪 Vendor"
+                  : "🛵 Rider"}
+            </button>
+          );
+        })}
       </div>
       <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
         <input
@@ -984,6 +1139,26 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
           }}
         />
       </div>
+      {(role === "vendor" || role === "rider") && (
+        <input
+          style={{ ...inSt, flex: "none", width: "100%" }}
+          type="text"
+          placeholder={
+            role === "vendor"
+              ? "🏪 Business / Shop Name *"
+              : "🛵 Delivery Business Name (optional)"
+          }
+          value={businessName}
+          onChange={(e) => setBusinessName(e.target.value)}
+          required={role === "vendor"}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = palette.teal.light;
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = c.border;
+          }}
+        />
+      )}
       <div
         style={{
           display: "flex",
@@ -1083,7 +1258,7 @@ function RoleSelector({
       icon: "🛍",
       title: "Buyer",
       subtitle: "Shop from Every Market",
-      desc: "Discover fashion items from Nigeria's top markets. Clothes, shoes, bags, fabrics — delivered fast.",
+      desc: "Discover fashion items from Nigeria's top markets. Clothes, shoes, bags, fabrics delivered fast.",
       img: IMG.couple,
       accent: palette.teal.light,
       color: isDark ? palette.teal.lighter : "#0f766e",
@@ -1406,7 +1581,7 @@ function Categories() {
             lineHeight: 1.8,
           }}
         >
-          From Balogun to your door find everything you need.
+          Now, you can buy, sell and order rides in one app.
         </p>
 
         <div
@@ -1781,7 +1956,7 @@ function FAQ() {
   const items = [
     {
       q: "What is O-Fash Markett?",
-      a: "It's the digital twin of Africa's fashion markets. Balogun, Onitsha, Dutse — all in one app. Access multiple vendors, shop items, and get delivery in hours.",
+      a: "It's the digital twin of Africa's fashion markets. Balogun, Onitsha, Dutse all in one app. Access multiple vendors, shop items, and get delivery in hours.",
     },
     {
       q: "Is registration really free?",
@@ -2071,7 +2246,7 @@ const MODALS: Record<
         {[
           {
             h: "Who We Are",
-            p: "O-Fash Markett is the digital branch of Africa's vibrant fashion market. We are not another fashion store or logistics company. We are building an app that serves as the structure between the market, the customer, and the delivery channel — all activities happening simultaneously in one app.",
+            p: "O-Fash Markett is the digital branch of Africa's vibrant fashion market. We are not another fashion store or logistics company. We are building an app that serves as the structure between the market, the customer, and the delivery channel all activities happening simultaneously in one app.",
           },
           {
             h: "Our Mission",
@@ -2368,7 +2543,9 @@ function Modal({ page, onClose }: { page: ModalPage; onClose: () => void }) {
 
   if (!page) return null;
   const isContact = page === "contact";
-  const content = isContact ? null : MODALS[page as "privacy" | "terms"];
+  const content = isContact
+    ? null
+    : MODALS[page as "privacy" | "terms" | "cookies" | "about"];
 
   return (
     <div
@@ -2609,10 +2786,47 @@ function Footer({ onLinkClick }: { onLinkClick: (page: ModalPage) => void }) {
   const c = colors[isDark ? "dark" : "light"];
 
   const socials = [
-    { icon: Share2, label: "Share" },
-    { icon: Globe, label: "Web" },
-    { icon: AtSign, label: "Contact" },
-    { icon: Video, label: "Video" },
+    {
+      label: "Facebook",
+      href: "https://facebook.com/ofashmarkett",
+      color: "#1877F2",
+      svg: (
+        <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor">
+          <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+        </svg>
+      ),
+    },
+    {
+      label: "Instagram",
+      href: "https://instagram.com/ofashmarkett",
+      color: "#E1306C",
+      svg: (
+        <svg
+          viewBox="0 0 24 24"
+          width={18}
+          height={18}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+        </svg>
+      ),
+    },
+    {
+      label: "Twitter / X",
+      href: "https://twitter.com/ofashmarkett",
+      color: "#1DA1F2",
+      svg: (
+        <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+        </svg>
+      ),
+    },
   ];
 
   return (
@@ -2658,9 +2872,14 @@ function Footer({ onLinkClick }: { onLinkClick: (page: ModalPage) => void }) {
               🚀 Launching soon in Lagos · Expanding rapidly
             </p>
             <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-              {socials.map(({ icon: Icon, label }) => (
-                <button
+              {socials.map(({ svg, label, href, color }) => (
+                <a
                   key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="social-btn"
                   style={{
                     width: 40,
                     height: 40,
@@ -2675,21 +2894,23 @@ function Footer({ onLinkClick }: { onLinkClick: (page: ModalPage) => void }) {
                     cursor: "pointer",
                     transition: "all 0.25s",
                     color: palette.teal.light,
+                    textDecoration: "none",
                   }}
-                  title={label}
-                  onMouseEnter={(e: MouseEvent<HTMLElement>) => {
-                    e.currentTarget.style.background = isDark
-                      ? "rgba(20,184,166,0.15)"
-                      : "rgba(13,148,136,0.15)";
+                  onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => {
+                    e.currentTarget.style.color = color;
+                    e.currentTarget.style.borderColor = color;
+                    e.currentTarget.style.background = `${color}18`;
                   }}
-                  onMouseLeave={(e: MouseEvent<HTMLElement>) => {
+                  onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => {
+                    e.currentTarget.style.color = palette.teal.light;
+                    e.currentTarget.style.borderColor = c.border;
                     e.currentTarget.style.background = isDark
                       ? "rgba(20,184,166,0.08)"
                       : "rgba(13,148,136,0.08)";
                   }}
                 >
-                  <Icon size={18} />
-                </button>
+                  {svg}
+                </a>
               ))}
             </div>
           </div>
@@ -2850,6 +3071,7 @@ function WaitlistPage({ onBack }: { onBack: () => void }) {
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [role, setRole] = useState("");
+  const [businessName, setBusinessName] = useState("");
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
 
@@ -2866,7 +3088,13 @@ function WaitlistPage({ onBack }: { onBack: () => void }) {
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.toLowerCase(), whatsapp, role }),
+        body: JSON.stringify({
+          email: email.toLowerCase(),
+          whatsapp,
+          role,
+          businessName:
+            role === "vendor" || role === "rider" ? businessName : undefined,
+        }),
       });
       const data = await res.json();
 
@@ -2881,7 +3109,7 @@ function WaitlistPage({ onBack }: { onBack: () => void }) {
       setRole("");
     } catch {
       setStatus("error");
-      setError("Network error — please check your connection.");
+      setError("Network error please check your connection.");
     }
   };
 
@@ -3019,39 +3247,48 @@ function WaitlistPage({ onBack }: { onBack: () => void }) {
           style={{ display: "flex", flexDirection: "column", gap: 16 }}
         >
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {["buyer", "vendor", "rider"].map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRole(role === r ? "" : r)}
-                style={{
-                  padding: "8px 18px",
-                  borderRadius: 100,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  fontFamily: "'Sora',sans-serif",
-                  cursor: "pointer",
-                  background:
-                    role === r
-                      ? "rgba(13,148,136,0.2)"
-                      : "rgba(13,148,136,0.08)",
-                  border: `1.5px solid ${role === r ? palette.teal.light : c.border}`,
-                  color:
-                    role === r
-                      ? isDark
-                        ? palette.teal.lighter
-                        : "#0f766e"
-                      : c.textMuted2,
-                  transition: "all 0.25s",
-                }}
-              >
-                {r === "buyer"
-                  ? "🛍 Buyer"
-                  : r === "vendor"
-                    ? "🏪 Vendor"
-                    : "🛵 Rider"}
-              </button>
-            ))}
+            {["buyer", "vendor", "rider"].map((r) => {
+              const sel = role === r;
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => {
+                    setRole(sel ? "" : r);
+                    setBusinessName("");
+                  }}
+                  style={{
+                    padding: "10px 22px",
+                    borderRadius: 100,
+                    fontSize: 14,
+                    fontWeight: 800,
+                    fontFamily: "'Sora',sans-serif",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    background: sel
+                      ? `linear-gradient(135deg,${palette.teal.light},${palette.green.vibrant})`
+                      : isDark
+                        ? "rgba(20,184,166,0.07)"
+                        : "rgba(13,148,136,0.07)",
+                    border: sel
+                      ? "1.5px solid transparent"
+                      : `1.5px solid ${c.border}`,
+                    color: sel ? "#fff" : c.textMuted2,
+                    boxShadow: sel
+                      ? "0 5px 18px rgba(13,148,136,0.38)"
+                      : "none",
+                    transform: sel ? "scale(1.05)" : "scale(1)",
+                  }}
+                >
+                  {sel ? "✓ " : ""}
+                  {r === "buyer"
+                    ? "🛍 Buyer"
+                    : r === "vendor"
+                      ? "🏪 Vendor"
+                      : "🛵 Rider"}
+                </button>
+              );
+            })}
           </div>
 
           <input
@@ -3102,6 +3339,38 @@ function WaitlistPage({ onBack }: { onBack: () => void }) {
               e.currentTarget.style.borderColor = c.border;
             }}
           />
+
+          {(role === "vendor" || role === "rider") && (
+            <input
+              type="text"
+              placeholder={
+                role === "vendor"
+                  ? "🏪 Business / Shop Name *"
+                  : "🛵 Delivery Business Name (optional)"
+              }
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              required={role === "vendor"}
+              style={{
+                padding: "14px 16px",
+                borderRadius: 12,
+                border: `1.5px solid ${palette.teal.light}`,
+                background: isDark ? c.bgAlt : c.bgAlt2,
+                color: c.text,
+                fontSize: 14.5,
+                outline: "none",
+                fontFamily: "'Sora',sans-serif",
+                transition: "border-color 0.25s",
+                animation: "slide-up 0.25s ease",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = palette.teal.lighter;
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = palette.teal.light;
+              }}
+            />
+          )}
 
           {error && (
             <div
@@ -3367,12 +3636,13 @@ function Hero({ onWaitlistClick }: { onWaitlistClick: () => void }) {
           data-hero-el
           style={{
             display: "flex",
-            gap: 56,
+            gap: 40,
             flexWrap: "wrap",
             justifyContent: "center",
           }}
         >
           {[
+            { num: 2000, suffix: "+", label: "Early Buyers" },
             { num: 500, suffix: "+", label: "Vendors Ready" },
             { num: 10, suffix: "K+", label: "Fashion Items" },
             { num: 150, suffix: "+", label: "Bike Riders" },
@@ -3670,7 +3940,10 @@ function AppContent() {
 
       {currentPage === "home" ? (
         <>
-          <Navigation onWaitlistClick={handleWaitlistClick} />
+          <Navigation
+            onWaitlistClick={handleWaitlistClick}
+            onOpenModal={openModal}
+          />
           {modal && <Modal page={modal} onClose={closeModal} />}
           <Hero onWaitlistClick={handleWaitlistClick} />
           <Marquee type="markets" />
@@ -3701,7 +3974,7 @@ function AppContent() {
                   lineHeight: 1.8,
                 }}
               >
-                Buyers, Vendors, Riders — we&apos;ve built for all of you.
+                Buyers, Vendors, Riders we&apos;ve built for all of you.
               </p>
               <RoleSelector onSelectRole={() => handleWaitlistClick()} />
             </div>
