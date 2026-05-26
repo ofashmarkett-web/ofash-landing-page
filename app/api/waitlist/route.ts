@@ -153,7 +153,6 @@ export async function POST(req: NextRequest) {
         <div class="step-item">You'll receive <strong>exclusive founding member perks</strong> and early access</div>
         <div class="step-item">Start shopping from <strong>Nigeria's top fashion markets</strong> in one app</div>
         <div class="step-item">Enjoy <strong>special early-bird discounts</strong> and welcome bonuses</div>
-        <div class="step-item">Get <strong>free delivery</strong> on your first 3 orders</div>
       </div>
 
       <!-- WHATSAPP NOTE -->

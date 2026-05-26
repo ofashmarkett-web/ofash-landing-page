@@ -2818,8 +2818,8 @@ function Footer({ onLinkClick }: { onLinkClick: (page: ModalPage) => void }) {
       ),
     },
     {
-      label: "Twitter / X",
-      href: "https://twitter.com/ofashmarkett",
+      label: "Tiktok",
+      href: "https://tiktok.com/@ofashmarkett",
       color: "#1DA1F2",
       svg: (
         <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor">
