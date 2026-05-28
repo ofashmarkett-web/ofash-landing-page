@@ -70,6 +70,17 @@ function parseNotifSubject(subject: string): { email: string; role: string; busi
   return { email, role, businessName };
 }
 
+// ── Shared email row type ────────────────────────────────────────────
+interface EmailRow {
+  id: string;
+  recipient: string;
+  subject: string;
+  sentAt: string;
+  status: string;
+  role: string | null;
+  businessName: string | null;
+}
+
 // ── Exported admin: GET stats ───────────────────────────────────────
 export async function GET(req: NextRequest) {
   if (!checkAuth(req)) {
@@ -81,61 +92,77 @@ export async function GET(req: NextRequest) {
   const vendors = registrations.filter((r) => r.role === "vendor").length;
   const riders  = registrations.filter((r) => r.role === "rider").length;
 
-  const idToRole            = new Map(registrations.filter((r) => r.emailId).map((r) => [r.emailId!, r.role]));
-  const idToBusinessName    = new Map(registrations.filter((r) => r.emailId).map((r) => [r.emailId!, r.businessName]));
-  const emailToRole         = new Map(registrations.map((r) => [r.email, r.role]));
-  const emailToBusinessName = new Map(registrations.map((r) => [r.email, r.businessName]));
-
-  // Local fallback
-  const localEmails = [...registrations].reverse().filter((r) => r.emailId).map((r) => ({
-    id: r.emailId!, recipient: r.email,
-    subject: "🎉 Welcome to O-Fash Markett Waitlist!",
-    sentAt: r.timestamp, status: "sent",
-    role: r.role as string | null, businessName: r.businessName ?? null,
-  }));
-
   const key = process.env.RESEND_API_KEY;
-  type EmailsResult = {
-    emails: typeof localEmails; total: number;
-    permissionError: boolean; rateLimited: boolean; error?: string;
-  };
 
-  const emptyResult: EmailsResult = { emails: [], total: 0, permissionError: false, rateLimited: false, error: "Request timed out" };
-  const timeoutP = new Promise<EmailsResult>((res) => setTimeout(() => res(emptyResult), FETCH_TIMEOUT_MS));
+  type ResendResult = { rows: RawEmail[]; permissionError: boolean; rateLimited: boolean; error?: string };
+  const emptyResend: ResendResult = { rows: [], permissionError: false, rateLimited: false, error: "Request timed out" };
+  const timeoutP = new Promise<ResendResult>((res) => setTimeout(() => res(emptyResend), FETCH_TIMEOUT_MS));
 
-  const resendP = (async (): Promise<EmailsResult> => {
-    if (!key) return { ...emptyResult, error: "No API key" };
+  const resendP = (async (): Promise<ResendResult> => {
+    if (!key) return { ...emptyResend, error: "No API key" };
     const resend = new Resend(key);
-    const { rows, permissionError, rateLimited, error } = await fetchAllRaw(resend);
-    if (error && !rateLimited) return { emails: [], total: 0, permissionError, rateLimited, error };
-
-    const userRows = rows.filter((e) => {
-      const to = Array.isArray(e.to) ? e.to.join(",") : (e.to ?? "");
-      return !to.includes(TEAM_EMAIL);
-    });
-
-    const emails = userRows.map((e) => {
-      const recipient    = (Array.isArray(e.to) ? e.to[0] : e.to) ?? "";
-      const role         = idToRole.get(e.id) ?? emailToRole.get(recipient) ?? null;
-      const businessName = idToBusinessName.get(e.id) ?? emailToBusinessName.get(recipient) ?? null;
-      return { id: e.id, recipient, subject: e.subject ?? "", sentAt: e.created_at ?? "", status: e.last_event ?? "sent", role, businessName: businessName ?? null };
-    });
-
-    return { emails, total: emails.length, permissionError, rateLimited, error };
+    return fetchAllRaw(resend);
   })();
 
-  const resend = await Promise.race([resendP, timeoutP]);
-  const emailsToShow = resend.emails.length > 0 ? resend.emails : localEmails;
+  const { rows, permissionError, rateLimited, error } = await Promise.race([resendP, timeoutP]);
+
+  // Index Resend user emails by ID and by normalised address for enrichment
+  const userRows = rows.filter((e) => {
+    const to = Array.isArray(e.to) ? e.to.join(",") : (e.to ?? "");
+    return !to.includes(TEAM_EMAIL);
+  });
+
+  // Maps for Resend metadata keyed by email ID and by normalised recipient address
+  const resendById  = new Map(userRows.map((e) => [e.id, e]));
+  const resendByAddr = new Map(
+    userRows.map((e) => [(Array.isArray(e.to) ? e.to[0] : e.to ?? "").trim().toLowerCase(), e])
+  );
+
+  // ── Primary list: one row per registration (role always known) ──────
+  const fromRegs: EmailRow[] = [...registrations].reverse().map((r) => {
+    const resendRow = (r.emailId ? resendById.get(r.emailId) : undefined) ?? resendByAddr.get(r.email.toLowerCase());
+    return {
+      id:           resendRow?.id ?? r.emailId ?? r.email,
+      recipient:    r.email,
+      subject:      resendRow?.subject ?? "🎉 Welcome to O-Fash Markett Waitlist!",
+      sentAt:       resendRow?.created_at ?? r.timestamp,
+      status:       resendRow?.last_event ?? "sent",
+      role:         r.role,
+      businessName: r.businessName ?? null,
+    };
+  });
+
+  // ── Secondary list: Resend emails with no matching registration ─────
+  const knownIds   = new Set(registrations.map((r) => r.emailId).filter(Boolean));
+  const knownAddrs = new Set(registrations.map((r) => r.email.toLowerCase()));
+
+  const fromResendOnly: EmailRow[] = userRows
+    .filter((e) => {
+      const addr = (Array.isArray(e.to) ? e.to[0] : e.to ?? "").trim().toLowerCase();
+      return !knownIds.has(e.id) && !knownAddrs.has(addr);
+    })
+    .map((e) => ({
+      id:           e.id,
+      recipient:    (Array.isArray(e.to) ? e.to[0] : e.to) ?? "",
+      subject:      e.subject ?? "",
+      sentAt:       e.created_at ?? "",
+      status:       e.last_event ?? "sent",
+      role:         null,
+      businessName: null,
+    }));
+
+  const allEmails: EmailRow[] = [...fromRegs, ...fromResendOnly];
+  const resendCount = error && !rateLimited ? null : userRows.length;
 
   return NextResponse.json({
     total: registrations.length,
     buyers, vendors, riders,
-    resendCount:           resend.error && !resend.rateLimited ? null : resend.total,
-    resendError:           resend.error ?? null,
-    resendPermissionError: resend.permissionError,
-    resendRateLimited:     resend.rateLimited,
-    resendEmails:          emailsToShow,
-    emailSource:           resend.emails.length > 0 ? "resend" : "local",
+    resendCount,
+    resendError:           error ?? null,
+    resendPermissionError: permissionError,
+    resendRateLimited:     rateLimited,
+    resendEmails:          allEmails,
+    emailSource:           rows.length > 0 ? "resend" : "local",
     registrations:         [...registrations].reverse(),
   });
 }
