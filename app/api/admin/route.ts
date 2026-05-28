@@ -106,19 +106,31 @@ export async function GET(req: NextRequest) {
 
   const { rows, permissionError, rateLimited, error } = await Promise.race([resendP, timeoutP]);
 
-  // Index Resend user emails by ID and by normalised address for enrichment
+  // Split Resend rows into user confirmation emails and team notifications
   const userRows = rows.filter((e) => {
     const to = Array.isArray(e.to) ? e.to.join(",") : (e.to ?? "");
     return !to.includes(TEAM_EMAIL);
   });
+  const teamRows = rows.filter((e) => {
+    const to = Array.isArray(e.to) ? e.to.join(",") : (e.to ?? "");
+    return to.includes(TEAM_EMAIL);
+  });
 
-  // Maps for Resend metadata keyed by email ID and by normalised recipient address
-  const resendById  = new Map(userRows.map((e) => [e.id, e]));
+  // Build role map from team notification subjects — covers all historical signups
+  // Subject format: "🆕 New Waitlist Signup: user@ex.com (Vendor · Business)"
+  const notifRoleMap = new Map<string, { role: string; businessName?: string }>();
+  for (const e of teamRows) {
+    const parsed = parseNotifSubject(e.subject ?? "");
+    if (parsed) notifRoleMap.set(parsed.email, { role: parsed.role, businessName: parsed.businessName });
+  }
+
+  // Maps for Resend metadata keyed by ID and normalised address
+  const resendById   = new Map(userRows.map((e) => [e.id, e]));
   const resendByAddr = new Map(
     userRows.map((e) => [(Array.isArray(e.to) ? e.to[0] : e.to ?? "").trim().toLowerCase(), e])
   );
 
-  // ── Primary list: one row per registration (role always known) ──────
+  // ── Primary list: one row per local registration (role always known) ─
   const fromRegs: EmailRow[] = [...registrations].reverse().map((r) => {
     const resendRow = (r.emailId ? resendById.get(r.emailId) : undefined) ?? resendByAddr.get(r.email.toLowerCase());
     return {
@@ -132,7 +144,8 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  // ── Secondary list: Resend emails with no matching registration ─────
+  // ── Secondary list: Resend emails not yet in local store ────────────
+  // Use notifRoleMap to recover role from team notification subjects
   const knownIds   = new Set(registrations.map((r) => r.emailId).filter(Boolean));
   const knownAddrs = new Set(registrations.map((r) => r.email.toLowerCase()));
 
@@ -141,15 +154,19 @@ export async function GET(req: NextRequest) {
       const addr = (Array.isArray(e.to) ? e.to[0] : e.to ?? "").trim().toLowerCase();
       return !knownIds.has(e.id) && !knownAddrs.has(addr);
     })
-    .map((e) => ({
-      id:           e.id,
-      recipient:    (Array.isArray(e.to) ? e.to[0] : e.to) ?? "",
-      subject:      e.subject ?? "",
-      sentAt:       e.created_at ?? "",
-      status:       e.last_event ?? "sent",
-      role:         null,
-      businessName: null,
-    }));
+    .map((e) => {
+      const addr     = (Array.isArray(e.to) ? e.to[0] : e.to ?? "").trim().toLowerCase();
+      const roleInfo = notifRoleMap.get(addr);
+      return {
+        id:           e.id,
+        recipient:    (Array.isArray(e.to) ? e.to[0] : e.to) ?? "",
+        subject:      e.subject ?? "",
+        sentAt:       e.created_at ?? "",
+        status:       e.last_event ?? "sent",
+        role:         roleInfo?.role ?? null,
+        businessName: roleInfo?.businessName ?? null,
+      };
+    });
 
   const allEmails: EmailRow[] = [...fromRegs, ...fromResendOnly];
   const resendCount = error && !rateLimited ? null : userRows.length;
