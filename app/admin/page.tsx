@@ -344,6 +344,8 @@ export default function AdminPage() {
   const [emailRoleFilter, setEmailRoleFilter] = useState("all");
   const [activeTab, setActiveTab]         = useState<"registrations" | "emails">("registrations");
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [syncing, setSyncing]         = useState(false);
+  const [syncResult, setSyncResult]   = useState<{ imported: number; skipped: number; unknown: number; total: number; message: string } | null>(null);
 
   // Tracks whether data has already been fetched for this session to prevent double-fetch
   const didFetchRef = useRef(false);
@@ -393,7 +395,21 @@ export default function AdminPage() {
 
   const handleLogout = () => {
     didFetchRef.current = false;
-    setAuthed(false); setStats(null); setPassword(""); sessionStorage.removeItem("ofm_admin_pw");
+    setAuthed(false); setStats(null); setPassword(""); setSyncResult(null); sessionStorage.removeItem("ofm_admin_pw");
+  };
+
+  const handleSync = async () => {
+    setSyncing(true); setSyncResult(null);
+    try {
+      const res  = await fetch("/api/admin", { method: "POST", headers: { "x-admin-password": password } });
+      const data = await res.json();
+      setSyncResult(data);
+      if (res.ok && data.imported > 0) await fetchStats(password);
+    } catch {
+      setSyncResult({ imported: 0, skipped: 0, unknown: 0, total: 0, message: "Sync failed — check your connection." });
+    } finally {
+      setSyncing(false);
+    }
   };
 
   // ── Design tokens ───────────────────────────────────────────────
@@ -547,6 +563,9 @@ export default function AdminPage() {
         <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
           {lastRefresh && <span style={{ fontSize:11, color:textMut2 }}>Updated: {lastRefresh.toLocaleTimeString()}</span>}
           <button onClick={() => fetchStats(password)} disabled={loading} style={btnSecondary}>{loading ? "⏳" : "↻ Refresh"}</button>
+          <button onClick={handleSync} disabled={syncing || loading} style={{ ...btnSecondary, background:"rgba(245,158,11,0.08)", border:"1px solid rgba(245,158,11,0.25)", color:gold, opacity: syncing ? 0.7 : 1 }}>
+            {syncing ? "⏳ Importing…" : "⬆ Sync from Resend"}
+          </button>
           <button onClick={handleLogout} style={{ ...btnSecondary, background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", color:"#f87171" }}>Log Out</button>
         </div>
       </div>
@@ -617,6 +636,21 @@ export default function AdminPage() {
               </div>
             )}
 
+            {/* ── Sync result banner ── */}
+            {syncResult && (
+              <div style={{ padding:"12px 16px", borderRadius:10, marginBottom:20, fontSize:13, background: syncResult.imported > 0 ? "rgba(74,222,128,0.06)" : "rgba(245,158,11,0.06)", border: `1px solid ${syncResult.imported > 0 ? "rgba(74,222,128,0.22)" : "rgba(245,158,11,0.22)"}`, color: syncResult.imported > 0 ? "#4ade80" : gold }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8 }}>
+                  <span>{syncResult.imported > 0 ? "✅" : "ℹ️"} {syncResult.message}</span>
+                  <button onClick={() => setSyncResult(null)} style={{ background:"none", border:"none", cursor:"pointer", color:"inherit", fontSize:16, lineHeight:1, padding:2, opacity:0.7 }}>✕</button>
+                </div>
+                {syncResult.imported > 0 && (
+                  <div style={{ marginTop:6, fontSize:12, opacity:0.8 }}>
+                    Imported: {syncResult.imported} · Skipped: {syncResult.skipped} · No role info: {syncResult.unknown}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* ── Match/mismatch banner ── */}
             {!stats.resendError && !stats.resendRateLimited && stats.resendCount !== null && (
               stats.resendCount === stats.total ? (
@@ -624,8 +658,8 @@ export default function AdminPage() {
                   ✓ Resend confirms <strong style={{margin:"0 3px"}}>{stats.resendCount}</strong> confirmation emails — matches local records.
                 </div>
               ) : (
-                <div style={{ padding:"9px 16px", borderRadius:10, background:"rgba(245,158,11,0.06)", border:"1px solid rgba(245,158,11,0.22)", marginBottom:20, fontSize:13, color:gold }}>
-                  ⚠️ Resend shows <strong style={{margin:"0 3px"}}>{stats.resendCount}</strong> user emails but local records show <strong style={{margin:"0 3px"}}>{stats.total}</strong> signups.
+                <div style={{ padding:"12px 16px", borderRadius:10, background:"rgba(245,158,11,0.06)", border:"1px solid rgba(245,158,11,0.22)", marginBottom:20, fontSize:13, color:gold }}>
+                  ⚠️ Resend shows <strong style={{margin:"0 3px"}}>{stats.resendCount}</strong> user emails but local records show <strong style={{margin:"0 3px"}}>{stats.total}</strong> signups — use <strong>⬆ Sync from Resend</strong> in the top bar to backfill missing records.
                 </div>
               )
             )}

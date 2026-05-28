@@ -224,14 +224,33 @@ export async function POST(req: NextRequest) {
       );
 
     // ── Persist to store ─────────────────────────────────────────────
-    saveRegistration({
-      email,
-      role,
-      businessName: businessName || undefined,
-      whatsapp: hasWhatsApp ? whatsapp : undefined,
-      timestamp: new Date().toISOString(),
-      emailId: userEmailRes.data?.id,
-    });
+    try {
+      saveRegistration({
+        email,
+        role,
+        businessName: businessName || undefined,
+        whatsapp: hasWhatsApp ? whatsapp : undefined,
+        timestamp: new Date().toISOString(),
+        emailId: userEmailRes.data?.id,
+      });
+    } catch (saveErr) {
+      const msg = saveErr instanceof Error ? saveErr.message : String(saveErr);
+
+      // Handle race-condition duplicate (two simultaneous submissions)
+      if (msg === "DUPLICATE_EMAIL") {
+        return NextResponse.json(
+          { error: "This email is already on the waitlist. Check your inbox for confirmation!" },
+          { status: 409 }
+        );
+      }
+
+      // Store write failure — email was sent but record not saved; log and alert
+      console.error("[waitlist] ❌ Store write failed after email send:", msg);
+      return NextResponse.json(
+        { error: "Your confirmation email was sent but we could not save your record. Please contact support." },
+        { status: 500 }
+      );
+    }
 
     console.log(`[waitlist] ✅ Registered: ${email} (${roleLabel})`);
 

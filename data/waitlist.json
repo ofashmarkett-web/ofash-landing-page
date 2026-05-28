@@ -1,1 +1,41 @@
-{ "registrations": [] }
+{
+  "registrations": [
+    {
+      "email": "onojanaomi00@gmail.com",
+      "role": "buyer",
+      "timestamp": "2026-05-28 14:41:35.447043+00",
+      "emailId": "9fe75122-9b86-49be-9dcc-7a05df7b9d3f"
+    },
+    {
+      "email": "izuhopara@gmail.com",
+      "role": "buyer",
+      "timestamp": "2026-05-28 10:52:22.068101+00",
+      "emailId": "e10eef4c-8a93-4fd1-aebd-cc623886bbad"
+    },
+    {
+      "email": "zinnyndubuisi6@gmail.com",
+      "role": "vendor",
+      "businessName": "Shop With Zinny",
+      "timestamp": "2026-05-28 09:27:20.644424+00",
+      "emailId": "3d87328c-5332-4073-8c06-2822e40409aa"
+    },
+    {
+      "email": "nanauwakmfon@gmail.com",
+      "role": "buyer",
+      "timestamp": "2026-05-28 01:45:12.587806+00",
+      "emailId": "4a863efd-f831-470c-8f35-86b72c0b7d29"
+    },
+    {
+      "email": "tblackthephotographer@gmail.com",
+      "role": "buyer",
+      "timestamp": "2026-05-24 15:56:25.261673+00",
+      "emailId": "87290232-986e-49e0-9656-0427a6f2aeba"
+    },
+    {
+      "email": "mercyogevision@gmail.com",
+      "role": "vendor",
+      "timestamp": "2026-05-15 08:09:50.116795+00",
+      "emailId": "6ccccc68-cfdd-4486-be9f-13a9c2c6c65e"
+    }
+  ]
+}
