@@ -914,8 +914,16 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!role) {
+      setErrMsg("Please select your role — Buyer, Vendor, or Rider.");
+      return;
+    }
     if (!email.includes("@")) {
       setErrMsg("Please enter a valid email.");
+      return;
+    }
+    if (role === "vendor" && !businessName.trim()) {
+      setErrMsg("Please enter your business / shop name.");
       return;
     }
     setStatus("loading");
@@ -1068,7 +1076,11 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
         maxWidth: 540,
       }}
     >
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div>
+        <p style={{ fontSize: 12, fontWeight: 700, color: palette.rust.light, marginBottom: 6, letterSpacing: 0.3 }}>
+          * Choose your role to continue
+        </p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {(["buyer", "vendor", "rider"] as const).map((r) => {
           const sel = role === r;
           return (
@@ -1109,6 +1121,7 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
             </button>
           );
         })}
+        </div>
       </div>
       <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
         <input
@@ -3077,8 +3090,16 @@ function WaitlistPage({ onBack }: { onBack: () => void }) {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!role) {
+      setError("Please select your role — Buyer, Vendor, or Rider.");
+      return;
+    }
     if (!email.includes("@")) {
       setError("Please enter a valid email.");
+      return;
+    }
+    if (role === "vendor" && !businessName.trim()) {
+      setError("Please enter your business / shop name.");
       return;
     }
     setStatus("loading");
