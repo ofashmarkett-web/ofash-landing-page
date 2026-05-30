@@ -14,40 +14,75 @@ interface Store {
   registrations: Registration[];
 }
 
-// Resolve path relative to the project root regardless of cwd at runtime
-const DATA_DIR  = path.resolve(process.cwd(), "data");
-const DATA_FILE = path.join(DATA_DIR, "waitlist.json");
+// Primary path (works on VPS / local dev)
+const DATA_DIR_PRIMARY  = path.resolve(process.cwd(), "data");
+const DATA_FILE_PRIMARY = path.join(DATA_DIR_PRIMARY, "waitlist.json");
 
-function ensureDir(): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-    console.log("[store] Created data dir:", DATA_DIR);
-  }
-}
-
-function read(): Store {
-  try {
-    ensureDir();
-    const raw    = fs.readFileSync(DATA_FILE, "utf-8");
-    const parsed = JSON.parse(raw) as Store;
-    if (!Array.isArray(parsed?.registrations)) return { registrations: [] };
-    return parsed;
-  } catch {
-    return { registrations: [] };
-  }
-}
-
-function write(store: Store): void {
-  ensureDir();
-  // Atomic write: write to .tmp then rename to prevent partial-write corruption
-  const tmp = DATA_FILE + ".tmp";
-  fs.writeFileSync(tmp, JSON.stringify(store, null, 2), "utf-8");
-  fs.renameSync(tmp, DATA_FILE);
-  console.log("[store] ✅ Wrote", store.registrations.length, "registrations to", DATA_FILE);
-}
+// Fallback path for read-only filesystems (Vercel, etc.)
+const DATA_FILE_TMP = "/tmp/ofash-waitlist.json";
 
 function normalise(email: string): string {
   return email.trim().toLowerCase();
+}
+
+// ── Try to write to a path; return true on success ────────────────────
+function tryWrite(filePath: string, content: string): boolean {
+  try {
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const tmp = filePath + ".tmp";
+    fs.writeFileSync(tmp, content, "utf-8");
+    fs.renameSync(tmp, filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ── Read from a path; return null if unreadable ───────────────────────
+function tryRead(filePath: string): Store | null {
+  try {
+    const raw    = fs.readFileSync(filePath, "utf-8");
+    const parsed = JSON.parse(raw) as Store;
+    return Array.isArray(parsed?.registrations) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+// ── Read registrations from both locations, deduplicated ─────────────
+function read(): Store {
+  const primary = tryRead(DATA_FILE_PRIMARY);
+  const tmp     = tryRead(DATA_FILE_TMP);
+
+  if (!primary && !tmp) return { registrations: [] };
+  if (!primary) return tmp!;
+  if (!tmp)     return primary;
+
+  // Merge: primary is base, tmp adds any extras not already in primary
+  const seen = new Set(primary.registrations.map((r) => normalise(r.email)));
+  const extras = tmp.registrations.filter((r) => !seen.has(normalise(r.email)));
+  return { registrations: [...primary.registrations, ...extras] };
+}
+
+// ── Write store; try primary first, fall back to /tmp ────────────────
+function write(store: Store): void {
+  const json = JSON.stringify(store, null, 2);
+
+  const primaryOk = tryWrite(DATA_FILE_PRIMARY, json);
+  if (primaryOk) {
+    console.log("[store] ✅ Wrote", store.registrations.length, "records to primary:", DATA_FILE_PRIMARY);
+    return;
+  }
+
+  const tmpOk = tryWrite(DATA_FILE_TMP, json);
+  if (tmpOk) {
+    console.log("[store] ✅ Wrote", store.registrations.length, "records to /tmp fallback");
+    return;
+  }
+
+  // Both paths failed — throw so caller can decide how to handle
+  throw new Error("WRITE_FAILED: could not write to primary or /tmp");
 }
 
 export function hasEmail(email: string): boolean {
@@ -59,7 +94,6 @@ export function saveRegistration(reg: Registration): void {
   const norm  = normalise(reg.email);
   const store = read();
 
-  // Guard against race-condition duplicates
   if (store.registrations.some((r) => normalise(r.email) === norm)) {
     console.warn("[store] ⚠️ Duplicate skipped:", reg.email);
     throw new Error("DUPLICATE_EMAIL");

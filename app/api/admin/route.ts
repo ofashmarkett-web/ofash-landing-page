@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
-import { getAllRegistrations, hasEmail, saveRegistration } from "@/lib/waitlistStore";
+import { getAllRegistrations, hasEmail, saveRegistration, type Registration } from "@/lib/waitlistStore";
 
 const TEAM_EMAIL       = "contact@o-fashmarkett.com";
 const MAX_PAGES        = 20;          // up to 2 000 emails
@@ -87,10 +87,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const registrations = getAllRegistrations();
-  const buyers  = registrations.filter((r) => r.role === "buyer").length;
-  const vendors = registrations.filter((r) => r.role === "vendor").length;
-  const riders  = registrations.filter((r) => r.role === "rider").length;
+  // Local store — may be empty if file writes failed on serverless
+  const localRegs = getAllRegistrations();
 
   const key = process.env.RESEND_API_KEY;
 
@@ -106,7 +104,7 @@ export async function GET(req: NextRequest) {
 
   const { rows, permissionError, rateLimited, error } = await Promise.race([resendP, timeoutP]);
 
-  // Split Resend rows into user confirmation emails and team notifications
+  // Split into user confirmation emails vs team notification emails
   const userRows = rows.filter((e) => {
     const to = Array.isArray(e.to) ? e.to.join(",") : (e.to ?? "");
     return !to.includes(TEAM_EMAIL);
@@ -116,22 +114,26 @@ export async function GET(req: NextRequest) {
     return to.includes(TEAM_EMAIL);
   });
 
-  // Build role map from team notification subjects — covers all historical signups
-  // Subject format: "🆕 New Waitlist Signup: user@ex.com (Vendor · Business)"
-  const notifRoleMap = new Map<string, { role: string; businessName?: string }>();
+  // Role map from team notification subjects — the only role source for historical emails
+  const notifRoleMap = new Map<string, { role: string; businessName?: string; timestamp: string }>();
   for (const e of teamRows) {
     const parsed = parseNotifSubject(e.subject ?? "");
-    if (parsed) notifRoleMap.set(parsed.email, { role: parsed.role, businessName: parsed.businessName });
+    if (parsed) notifRoleMap.set(parsed.email, { role: parsed.role, businessName: parsed.businessName, timestamp: e.created_at ?? "" });
   }
 
-  // Maps for Resend metadata keyed by ID and normalised address
+  // Resend metadata lookup by email ID and normalised address
   const resendById   = new Map(userRows.map((e) => [e.id, e]));
   const resendByAddr = new Map(
     userRows.map((e) => [(Array.isArray(e.to) ? e.to[0] : e.to ?? "").trim().toLowerCase(), e])
   );
 
-  // ── Primary list: one row per local registration (role always known) ─
-  const fromRegs: EmailRow[] = [...registrations].reverse().map((r) => {
+  // ── Email rows for the Emails Sent tab ───────────────────────────────
+
+  // Local registrations enriched with live Resend status
+  const knownIds   = new Set(localRegs.map((r) => r.emailId).filter(Boolean));
+  const knownAddrs = new Set(localRegs.map((r) => r.email.toLowerCase()));
+
+  const fromLocalRegs: EmailRow[] = [...localRegs].reverse().map((r) => {
     const resendRow = (r.emailId ? resendById.get(r.emailId) : undefined) ?? resendByAddr.get(r.email.toLowerCase());
     return {
       id:           resendRow?.id ?? r.emailId ?? r.email,
@@ -144,11 +146,7 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  // ── Secondary list: Resend emails not yet in local store ────────────
-  // Use notifRoleMap to recover role from team notification subjects
-  const knownIds   = new Set(registrations.map((r) => r.emailId).filter(Boolean));
-  const knownAddrs = new Set(registrations.map((r) => r.email.toLowerCase()));
-
+  // Resend emails with no local store entry — role recovered from team notifications
   const fromResendOnly: EmailRow[] = userRows
     .filter((e) => {
       const addr = (Array.isArray(e.to) ? e.to[0] : e.to ?? "").trim().toLowerCase();
@@ -168,19 +166,45 @@ export async function GET(req: NextRequest) {
       };
     });
 
-  const allEmails: EmailRow[] = [...fromRegs, ...fromResendOnly];
+  const allEmails: EmailRow[] = [...fromLocalRegs, ...fromResendOnly];
+
+  // ── Merged registrations for stat cards, chart, and Registrations tab ─
+  // Combine local store + Resend-only entries so counts are always accurate
+  // even when file writes failed (serverless read-only filesystem).
+  const resendOnlyRegs: Registration[] = fromResendOnly
+    .filter((e) => e.role !== null)
+    .map((e) => {
+      const notif = notifRoleMap.get(e.recipient.toLowerCase());
+      return {
+        email:        e.recipient.toLowerCase(),
+        role:         e.role!,
+        businessName: e.businessName ?? undefined,
+        timestamp:    notif?.timestamp || e.sentAt || new Date().toISOString(),
+        emailId:      e.id,
+      };
+    });
+
+  // Sort newest-first
+  const mergedRegs: Registration[] = [...localRegs, ...resendOnlyRegs].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+
+  // Stat counts — always reflect the full picture (Resend + local)
+  const total   = mergedRegs.length;
+  const buyers  = mergedRegs.filter((r) => r.role === "buyer").length;
+  const vendors = mergedRegs.filter((r) => r.role === "vendor").length;
+  const riders  = mergedRegs.filter((r) => r.role === "rider").length;
   const resendCount = error && !rateLimited ? null : userRows.length;
 
   return NextResponse.json({
-    total: registrations.length,
-    buyers, vendors, riders,
+    total, buyers, vendors, riders,
     resendCount,
     resendError:           error ?? null,
     resendPermissionError: permissionError,
     resendRateLimited:     rateLimited,
     resendEmails:          allEmails,
     emailSource:           rows.length > 0 ? "resend" : "local",
-    registrations:         [...registrations].reverse(),
+    registrations:         mergedRegs,
   });
 }
 
