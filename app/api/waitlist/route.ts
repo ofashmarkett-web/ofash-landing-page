@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
-import { hasEmail, saveRegistration } from "@/lib/waitlistStore";
+import { hasEmail, markEmailSent } from "@/lib/waitlistStore";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const FROM = "O-Fash Markett <noreply@o-fashmarkett.com>";
-const TEAM_EMAIL = "contact@o-fashmarkett.com";
 const YEAR = new Date().getFullYear();
 
 export async function POST(req: NextRequest) {
@@ -67,7 +66,7 @@ export async function POST(req: NextRequest) {
     const userEmailRes = await resend.emails.send({
       from: FROM,
       to: email,
-      subject: "🎉 Welcome to O-Fash Markett Waitlist!",
+      subject: `🎉 Welcome to O-Fash Markett Waitlist! (${roleLabel}${businessName ? ` · ${businessName}` : ""}${hasWhatsApp ? ` · WA:${whatsapp}` : ""})`,
       html: `<!DOCTYPE html>
 <html>
 <head>
@@ -195,60 +194,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Team notification ────────────────────────────────────────────
-    resend.emails
-      .send({
-        from: FROM,
-        to: TEAM_EMAIL,
-        subject: `🆕 New Waitlist Signup: ${email} (${roleLabel}${businessName ? ` · ${businessName}` : ""})`,
-        html: `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8fdfb;padding:30px;border-radius:10px;">
-          <h2 style="color:#0d9488;font-size:24px;margin-bottom:20px;">🔔 New Waitlist Registration</h2>
-          <div style="background:#eef6f4;padding:20px;border-left:4px solid #0d9488;margin-bottom:20px;border-radius:8px;">
-            <p style="margin:10px 0;font-size:16px;color:#042e2a;"><strong>Email:</strong> ${email}</p>
-            <p style="margin:10px 0;font-size:16px;color:#042e2a;"><strong>Role:</strong> ${roleLabel}</p>
-            ${businessName ? `<p style="margin:10px 0;font-size:16px;color:#042e2a;"><strong>${role === "rider" ? "Delivery Business" : "Business/Shop"}:</strong> ${businessName}</p>` : ""}
-            ${hasWhatsApp ? `<p style="margin:10px 0;font-size:16px;color:#042e2a;"><strong>WhatsApp:</strong> ${whatsapp}</p>` : ""}
-            <p style="margin:10px 0;font-size:16px;color:#042e2a;">
-              <strong>Time:</strong> ${new Date().toLocaleString("en-NG", {
-                timeZone: "Africa/Lagos",
-                dateStyle: "medium",
-                timeStyle: "short",
-              })} WAT
-            </p>
-          </div>
-        </div>`,
-      })
-      .catch((err) =>
-        console.warn("[waitlist] ⚠️ Team notification failed:", err)
-      );
-
-    // ── Persist to store ─────────────────────────────────────────────
-    try {
-      saveRegistration({
-        email,
-        role,
-        businessName: businessName || undefined,
-        whatsapp: hasWhatsApp ? whatsapp : undefined,
-        timestamp: new Date().toISOString(),
-        emailId: userEmailRes.data?.id,
-      });
-    } catch (saveErr) {
-      const msg = saveErr instanceof Error ? saveErr.message : String(saveErr);
-
-      // Race-condition duplicate — two simultaneous submissions for same email
-      if (msg === "DUPLICATE_EMAIL") {
-        return NextResponse.json(
-          { error: "This email is already on the waitlist. Check your inbox for confirmation!" },
-          { status: 409 }
-        );
-      }
-
-      // Write failed on both primary and /tmp (e.g. read-only serverless filesystem).
-      // The confirmation email was already delivered — treat as success and let
-      // the admin sync from Resend to recover the record.
-      console.error("[waitlist] ⚠️ Store write failed (email delivered, record will appear via Resend sync):", msg);
-    }
+    // Mark in-memory so same warm instance won't accept duplicate
+    markEmailSent(email);
 
     console.log(`[waitlist] ✅ Registered: ${email} (${roleLabel})`);
 
