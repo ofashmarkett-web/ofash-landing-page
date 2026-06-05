@@ -922,8 +922,16 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
       setErrMsg("Please enter a valid email.");
       return;
     }
+    if (!wa.trim() || wa.trim().length < 7) {
+      setErrMsg("Please enter your WhatsApp number — it's required for launch updates.");
+      return;
+    }
     if (role === "vendor" && !businessName.trim()) {
       setErrMsg("Please enter your business / shop name.");
+      return;
+    }
+    if (role === "rider" && !businessName.trim()) {
+      setErrMsg("Please enter your rider company / delivery business name.");
       return;
     }
     setStatus("loading");
@@ -1141,9 +1149,10 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
         <input
           style={inSt}
           type="tel"
-          placeholder="WhatsApp number"
+          placeholder="WhatsApp number *"
           value={wa}
           onChange={(e) => setWa(e.target.value)}
+          required
           onFocus={(e) => {
             e.currentTarget.style.borderColor = palette.teal.light;
           }}
@@ -1159,11 +1168,11 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
           placeholder={
             role === "vendor"
               ? "🏪 Business / Shop Name *"
-              : "🛵 Delivery Business Name (optional)"
+              : "🛵 Rider Company / Delivery Business Name *"
           }
           value={businessName}
           onChange={(e) => setBusinessName(e.target.value)}
-          required={role === "vendor"}
+          required
           onFocus={(e) => {
             e.currentTarget.style.borderColor = palette.teal.light;
           }}
@@ -3098,8 +3107,16 @@ function WaitlistPage({ onBack }: { onBack: () => void }) {
       setError("Please enter a valid email.");
       return;
     }
+    if (!whatsapp.trim() || whatsapp.trim().length < 7) {
+      setError("Please enter your WhatsApp number — it's required for launch updates.");
+      return;
+    }
     if (role === "vendor" && !businessName.trim()) {
       setError("Please enter your business / shop name.");
+      return;
+    }
+    if (role === "rider" && !businessName.trim()) {
+      setError("Please enter your rider company / delivery business name.");
       return;
     }
     setStatus("loading");
@@ -3339,9 +3356,10 @@ function WaitlistPage({ onBack }: { onBack: () => void }) {
 
           <input
             type="tel"
-            placeholder="WhatsApp number (optional)"
+            placeholder="WhatsApp number *"
             value={whatsapp}
             onChange={(e) => setWhatsapp(e.target.value)}
+            required
             style={{
               padding: "14px 16px",
               borderRadius: 12,
@@ -3367,11 +3385,11 @@ function WaitlistPage({ onBack }: { onBack: () => void }) {
               placeholder={
                 role === "vendor"
                   ? "🏪 Business / Shop Name *"
-                  : "🛵 Delivery Business Name (optional)"
+                  : "🛵 Rider Company / Delivery Business Name *"
               }
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
-              required={role === "vendor"}
+              required
               style={{
                 padding: "14px 16px",
                 borderRadius: 12,

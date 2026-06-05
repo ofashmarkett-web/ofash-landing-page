@@ -40,10 +40,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Enforce business name for vendors
+    // Enforce WhatsApp for everyone
+    if (!whatsapp || whatsapp.length < 7) {
+      return NextResponse.json(
+        { error: "Please enter your WhatsApp number — it's required for launch updates." },
+        { status: 400 }
+      );
+    }
+
+    // Enforce business / shop name for vendors
     if (role === "vendor" && !businessName) {
       return NextResponse.json(
         { error: "Please enter your business / shop name." },
+        { status: 400 }
+      );
+    }
+
+    // Enforce company name for riders
+    if (role === "rider" && !businessName) {
+      return NextResponse.json(
+        { error: "Please enter your rider company / delivery business name." },
         { status: 400 }
       );
     }
@@ -59,7 +75,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const hasWhatsApp = whatsapp.length > 7;
+    const hasWhatsApp = whatsapp.length >= 7;
     const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
 
     // ── Send confirmation email to user ──────────────────────────────
