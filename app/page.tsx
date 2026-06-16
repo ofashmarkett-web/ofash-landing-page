@@ -12,7 +12,7 @@ import {
   type MouseEvent,
   type FormEvent,
 } from "react";
-import { Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowRight, Bell, Download, Smartphone } from "lucide-react";
 import { animate, stagger } from "animejs";
 
 // ────── THEME CONTEXT ──────
@@ -191,6 +191,8 @@ function GlobalStyles() {
       .btn-secondary:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(245,158,11,0.35);}
       .trust-card:hover{transform:translateY(-5px)!important;}
       .step-card:hover{transform:translateY(-6px)!important;}
+      .store-button:hover{transform:translateY(-4px)!important;}
+      .store-button:hover .store-note,.store-button:focus-visible .store-note{opacity:1!important;transform:translate(-50%,-10px)!important;pointer-events:auto!important;}
       .faq-item:hover .faq-q{color:${palette.teal.lighter}!important;}
       .footer-link:hover{color:${palette.teal.lighter}!important;}
       .social-btn:hover{background:rgba(20,184,166,0.14)!important;border-color:rgba(20,184,166,0.38)!important;}
@@ -204,6 +206,8 @@ function GlobalStyles() {
         .cat-g{grid-template-columns:repeat(2,1fr)!important;}
         .trust-g{grid-template-columns:repeat(2,1fr)!important;}
         .steps-g{grid-template-columns:1fr!important;}
+        .store-download-g{grid-template-columns:1fr!important;}
+        .store-button .store-note{display:none!important;}
       }
       @media(max-width:600px){
         .footer-g{grid-template-columns:1fr!important;}
@@ -1966,6 +1970,369 @@ function Trust() {
         </div>
       </div>
     </section>
+  );
+}
+
+// ────── APP DOWNLOAD SECTION ──────
+function AppDownloadSection({ onMobileNotice }: { onMobileNotice: () => void }) {
+  const { isDark } = useTheme();
+  const c = colors[isDark ? "dark" : "light"];
+  const notice =
+    "We're working on the mobile app and will contact you through the email provided in your waitlist registration.";
+
+  const stores = [
+    {
+      label: "Apple App Store",
+      eyebrow: "Download on the",
+      icon: "",
+      accent: palette.teal.lighter,
+    },
+    {
+      label: "Google Play Store",
+      eyebrow: "Get it on",
+      icon: <Smartphone size={27} strokeWidth={2.2} />,
+      accent: palette.gold.light,
+    },
+  ];
+
+  const handleStoreClick = () => {
+    if (typeof window === "undefined") return;
+    const shouldOpenModal = window.matchMedia(
+      "(hover: none), (pointer: coarse), (max-width: 760px)",
+    ).matches;
+    if (shouldOpenModal) onMobileNotice();
+  };
+
+  return (
+    <section id="download-app" style={{ padding: "90px 24px" }}>
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          display: "grid",
+          gridTemplateColumns: "1fr 1.05fr",
+          gap: 32,
+          alignItems: "center",
+        }}
+        className="store-download-g"
+        data-anime
+      >
+        <div data-stagger-child>
+          <p
+            style={{
+              fontSize: 12,
+              fontWeight: 800,
+              letterSpacing: "0.16em",
+              color: isDark ? palette.teal.light : "#0f766e",
+              textTransform: "uppercase",
+              marginBottom: 18,
+            }}
+          >
+            Mobile app
+          </p>
+          <h2
+            style={{
+              fontSize: "clamp(28px,4vw,52px)",
+              fontWeight: 900,
+              fontFamily: "'Playfair Display',serif",
+              letterSpacing: "-1px",
+              lineHeight: 1.12,
+              marginBottom: 18,
+              color: c.text,
+            }}
+          >
+            Shop the market from your phone soon
+          </h2>
+          <p
+            style={{
+              fontSize: 17,
+              color: c.textMuted,
+              lineHeight: 1.85,
+              maxWidth: 520,
+            }}
+          >
+            O-Fash Markett is preparing native mobile apps for buyers, vendors,
+            and riders. Join the waitlist so we know where to send your early
+            access update.
+          </p>
+        </div>
+
+        <div
+          data-stagger-child
+          style={{
+            borderRadius: 24,
+            border: `1.5px solid ${c.border}`,
+            background: isDark
+              ? "linear-gradient(145deg,rgba(20,184,166,0.08),rgba(245,158,11,0.045))"
+              : "linear-gradient(145deg,rgba(13,148,136,0.08),rgba(245,158,11,0.08))",
+            padding: 24,
+            boxShadow: isDark
+              ? "0 28px 80px rgba(0,0,0,0.28)"
+              : "0 24px 70px rgba(13,116,104,0.10)",
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 14,
+            }}
+            className="store-download-g"
+          >
+            {stores.map((store) => (
+              <button
+                key={store.label}
+                type="button"
+                className="store-button"
+                onClick={handleStoreClick}
+                aria-label={`${store.label} download coming soon`}
+                style={{
+                  position: "relative",
+                  minHeight: 96,
+                  borderRadius: 16,
+                  border: `1.5px solid ${c.borderLight}`,
+                  background: isDark ? "rgba(5,12,11,0.72)" : "rgba(255,255,255,0.62)",
+                  color: c.text,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "18px 19px",
+                  textAlign: "left",
+                  fontFamily: "'Sora',sans-serif",
+                  transition: "transform 0.25s, border-color 0.25s, box-shadow 0.25s",
+                  boxShadow: "0 12px 34px rgba(0,0,0,0.12)",
+                }}
+                onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => {
+                  e.currentTarget.style.borderColor = store.accent;
+                  e.currentTarget.style.boxShadow = isDark
+                    ? "0 18px 48px rgba(13,148,136,0.18)"
+                    : "0 18px 48px rgba(13,116,104,0.16)";
+                }}
+                onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => {
+                  e.currentTarget.style.borderColor = c.borderLight;
+                  e.currentTarget.style.boxShadow = "0 12px 34px rgba(0,0,0,0.12)";
+                }}
+              >
+                <span
+                  style={{
+                    width: 48,
+                    height: 48,
+                    flexShrink: 0,
+                    borderRadius: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: isDark
+                      ? "rgba(20,184,166,0.12)"
+                      : "rgba(13,148,136,0.10)",
+                    color: store.accent,
+                    fontSize: 31,
+                    fontWeight: 900,
+                    lineHeight: 1,
+                  }}
+                >
+                  {store.icon}
+                </span>
+                <span style={{ minWidth: 0 }}>
+                  <span
+                    style={{
+                      display: "block",
+                      fontSize: 11,
+                      color: c.textMuted2,
+                      fontWeight: 800,
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                      lineHeight: 1.25,
+                    }}
+                  >
+                    {store.eyebrow}
+                  </span>
+                  <span
+                    style={{
+                      display: "block",
+                      fontSize: 17,
+                      color: c.text,
+                      fontWeight: 900,
+                      lineHeight: 1.3,
+                      marginTop: 3,
+                    }}
+                  >
+                    {store.label}
+                  </span>
+                </span>
+                <span
+                  className="store-note"
+                  role="status"
+                  style={{
+                    position: "absolute",
+                    left: "50%",
+                    bottom: "calc(100% + 10px)",
+                    width: "min(320px,86vw)",
+                    opacity: 0,
+                    transform: "translate(-50%,0)",
+                    pointerEvents: "none",
+                    transition: "opacity 0.2s, transform 0.2s",
+                    padding: "12px 14px",
+                    borderRadius: 12,
+                    border: `1px solid ${c.borderLight}`,
+                    background: isDark ? "rgba(5,12,11,0.97)" : "rgba(248,253,251,0.98)",
+                    color: c.textMuted,
+                    boxShadow: "0 18px 46px rgba(0,0,0,0.24)",
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    lineHeight: 1.55,
+                    zIndex: 5,
+                  }}
+                >
+                  {notice}
+                </span>
+              </button>
+            ))}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 9,
+              marginTop: 18,
+              color: c.textMuted2,
+              fontSize: 13,
+              lineHeight: 1.7,
+            }}
+          >
+            <Bell size={16} color={palette.gold.light} />
+            Waitlist members will receive the first app availability email.
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AppDownloadNoticeModal({ onClose }: { onClose: () => void }) {
+  const { isDark } = useTheme();
+  const c = colors[isDark ? "dark" : "light"];
+
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", h);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", h);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 1000,
+        background: isDark ? "rgba(5,12,11,0.92)" : "rgba(248,253,251,0.92)",
+        backdropFilter: "blur(22px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 24,
+        animation: "fade-in 0.2s ease",
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="glass"
+        style={{
+          width: "100%",
+          maxWidth: 420,
+          borderRadius: 22,
+          padding: 26,
+          boxShadow: "0 34px 100px rgba(0,0,0,0.58)",
+          animation: "slide-up 0.25s ease",
+        }}
+      >
+        <button
+          className="modal-close"
+          onClick={onClose}
+          aria-label="Close app download notice"
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 8,
+            background: isDark ? "rgba(20,184,166,0.07)" : "rgba(13,148,136,0.07)",
+            border: `1px solid ${c.border}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            color: c.textMuted2,
+            marginLeft: "auto",
+            marginBottom: 10,
+          }}
+        >
+          <X size={17} />
+        </button>
+        <div
+          style={{
+            width: 58,
+            height: 58,
+            borderRadius: 16,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: isDark ? "rgba(20,184,166,0.12)" : "rgba(13,148,136,0.10)",
+            color: isDark ? palette.teal.lighter : "#0f766e",
+            marginBottom: 18,
+          }}
+        >
+          <Download size={28} />
+        </div>
+        <h2
+          style={{
+            fontSize: 25,
+            fontWeight: 900,
+            fontFamily: "'Playfair Display',serif",
+            color: c.text,
+            marginBottom: 10,
+            letterSpacing: "-0.5px",
+          }}
+        >
+          App download coming soon
+        </h2>
+        <p
+          style={{
+            fontSize: 15.5,
+            color: c.textMuted,
+            lineHeight: 1.8,
+            marginBottom: 22,
+          }}
+        >
+          We&apos;re working on the mobile app and will contact you through the
+          email provided in your waitlist registration.
+        </p>
+        <button
+          onClick={onClose}
+          style={{
+            width: "100%",
+            padding: "14px 18px",
+            borderRadius: 12,
+            border: "none",
+            background: `linear-gradient(135deg,${palette.teal.light},${palette.green.vibrant})`,
+            color: isDark ? colors.dark.bg : "#042e2a",
+            fontWeight: 900,
+            fontSize: 15,
+            cursor: "pointer",
+            fontFamily: "'Sora',sans-serif",
+          }}
+        >
+          Got it
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -3903,6 +4270,7 @@ function AppContent() {
   const c = colors[isDark ? "dark" : "light"];
   const [currentPage, setCurrentPage] = useState<"home" | "waitlist">("home");
   const [modal, setModal] = useState<ModalPage>(null);
+  const [appNoticeOpen, setAppNoticeOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -3984,6 +4352,9 @@ function AppContent() {
             onOpenModal={openModal}
           />
           {modal && <Modal page={modal} onClose={closeModal} />}
+          {appNoticeOpen && (
+            <AppDownloadNoticeModal onClose={() => setAppNoticeOpen(false)} />
+          )}
           <Hero onWaitlistClick={handleWaitlistClick} />
           <Marquee type="markets" />
           <MarketBanner />
@@ -4020,6 +4391,7 @@ function AppContent() {
           </section>
           <Categories />
           <HowItWorks />
+          <AppDownloadSection onMobileNotice={() => setAppNoticeOpen(true)} />
           <Trust />
           <FAQ />
           <section style={{ padding: "74px 24px" }}>
