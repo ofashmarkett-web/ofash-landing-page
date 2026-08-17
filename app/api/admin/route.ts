@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
-import { hasEmail, markEmailSent, type Registration } from "@/lib/waitlistStore";
+import { markEmailSent, type Registration } from "@/lib/waitlistStore";
 
 const TEAM_EMAIL       = "contact@o-fashmarkett.com";
 const MAX_PAGES        = 20;          // up to 2 000 emails

@@ -363,19 +363,23 @@ export default function AdminPage() {
     finally { setLoading(false); }
   }, []);
 
-  // Restore session on mount
+  // Restore an existing session on mount, then load its data in the same pass.
+  // sessionStorage is client-only, so this cannot be read during render without
+  // desyncing from the server-rendered HTML — hence the one-shot effect. The ref
+  // guard keeps it from re-running after an interactive login.
   useEffect(() => {
+    if (didFetchRef.current) return;
     const saved = sessionStorage.getItem("ofm_admin_pw");
-    if (saved) { setPassword(saved); setAuthed(true); }
-  }, []);
-
-  // Auto-fetch once after session restore (ref prevents double-fetch after login)
-  useEffect(() => {
-    if (authed && password && !didFetchRef.current) {
-      didFetchRef.current = true;
-      fetchStats(password);
-    }
-  }, [authed, password, fetchStats]);
+    if (!saved) return;
+    didFetchRef.current = true;
+    /* eslint-disable react-hooks/set-state-in-effect --
+       Deliberate one-time hydration of client-only session state; there is no
+       render-time equivalent that stays hydration-safe. */
+    setPassword(saved);
+    setAuthed(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+    fetchStats(saved);
+  }, [fetchStats]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); setAuthErr(""); setLoading(true);
