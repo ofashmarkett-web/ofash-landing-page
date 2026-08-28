@@ -1,6 +1,8 @@
-// ── Shared type used by admin API response ─────────────────────────
+import { getAdminDb } from "@/lib/firebaseAdmin";
+
 export interface Registration {
   email: string;
+  name?: string;
   role: string;
   businessName?: string;
   whatsapp?: string;
@@ -8,19 +10,21 @@ export interface Registration {
   emailId?: string;
 }
 
-// ── In-memory duplicate guard (best-effort within a process) ────────
-// Resend is the real source of truth; this just prevents double-sends
-// on the same warm Lambda/server instance.
+const COLLECTION = "waitlistRegistrations";
 const _sent = new Set<string>();
+const norm = (email: string) => email.trim().toLowerCase();
+export function hasEmail(email: string) { return _sent.has(norm(email)); }
+export function markEmailSent(email: string) { _sent.add(norm(email)); }
 
-function norm(email: string): string {
-  return email.trim().toLowerCase();
+export async function getStoredRegistrations(): Promise<Registration[]> {
+  const snapshot = await getAdminDb().collection(COLLECTION).orderBy("timestamp", "desc").get();
+  return snapshot.docs.map((document) => document.data() as Registration);
 }
 
-export function hasEmail(email: string): boolean {
-  return _sent.has(norm(email));
-}
-
-export function markEmailSent(email: string): void {
-  _sent.add(norm(email));
+export async function storeRegistration(registration: Registration): Promise<void> {
+  await getAdminDb().collection(COLLECTION).doc(norm(registration.email)).set({
+    ...registration,
+    email: norm(registration.email),
+    updatedAt: new Date().toISOString(),
+  }, { merge: true });
 }

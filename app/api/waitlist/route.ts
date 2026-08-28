@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
-import { hasEmail, markEmailSent } from "@/lib/waitlistStore";
+import { hasEmail, markEmailSent, storeRegistration } from "@/lib/waitlistStore";
+
+export const runtime = "nodejs";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -19,6 +21,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const email: string = (body.email ?? "").trim().toLowerCase();
+    const name: string = (body.name ?? "").trim();
     const whatsapp: string = (body.whatsapp ?? "").trim();
     const role: string = (body.role ?? "").trim().toLowerCase();
     const businessName: string = (body.businessName ?? "").trim();
@@ -30,6 +33,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    if (!name) return NextResponse.json({ error: "Please enter your name." }, { status: 400 });
 
     // Enforce role selection
     const validRoles = ["buyer", "vendor", "rider"];
@@ -82,7 +86,7 @@ export async function POST(req: NextRequest) {
     const userEmailRes = await resend.emails.send({
       from: FROM,
       to: email,
-      subject: `🎉 Welcome to O-Fash Markett Waitlist! (${roleLabel}${businessName ? ` · ${businessName}` : ""}${hasWhatsApp ? ` · WA:${whatsapp}` : ""})`,
+      subject: `🎉 Welcome to O-Fash Markett Waitlist! (${roleLabel} · ${name}${businessName ? ` · ${businessName}` : ""}${hasWhatsApp ? ` · WA:${whatsapp}` : ""})`,
       html: `<!DOCTYPE html>
 <html>
 <head>
@@ -212,6 +216,19 @@ export async function POST(req: NextRequest) {
 
     // Mark in-memory so same warm instance won't accept duplicate
     markEmailSent(email);
+    try {
+      await storeRegistration({
+        email,
+        name,
+        role,
+        businessName: businessName || undefined,
+        whatsapp,
+        timestamp: new Date().toISOString(),
+        emailId: userEmailRes.data?.id,
+      });
+    } catch (storageError) {
+      console.error("[waitlist] Registration email sent, but local storage failed:", storageError);
+    }
 
     console.log(`[waitlist] ✅ Registered: ${email} (${roleLabel})`);
 

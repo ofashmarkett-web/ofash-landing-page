@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 // ── Types ──────────────────────────────────────────────────────────
 interface Reg {
   email: string;
+  name?: string;
   role: string;
   businessName?: string;
   whatsapp?: string;
@@ -19,7 +20,10 @@ interface SentEmail {
   sentAt: string;
   status: string;
   role: string | null;
+  name: string | null;
   businessName: string | null;
+  whatsapp: string | null;
+  kind: "user" | "team";
 }
 
 interface Stats {
@@ -31,6 +35,7 @@ interface Stats {
   resendError: string | null;
   resendPermissionError: boolean;
   resendRateLimited: boolean;
+  storageError: string | null;
   resendEmails: SentEmail[];
   emailSource: "resend" | "local";
   registrations: Reg[];
@@ -344,6 +349,8 @@ export default function AdminPage() {
   const [emailRoleFilter, setEmailRoleFilter] = useState("all");
   const [activeTab, setActiveTab]         = useState<"registrations" | "emails">("registrations");
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [migrating, setMigrating] = useState(false);
+  const [migrationMessage, setMigrationMessage] = useState("");
 
   // Tracks whether data has already been fetched for this session to prevent double-fetch
   const didFetchRef = useRef(false);
@@ -400,6 +407,19 @@ export default function AdminPage() {
     setAuthed(false); setStats(null); setPassword(""); sessionStorage.removeItem("ofm_admin_pw");
   };
 
+  const migrateResend = async () => {
+    setMigrating(true); setMigrationMessage("");
+    try {
+      const res = await fetch("/api/admin", { method: "POST", headers: { "x-admin-password": password } });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Migration failed");
+      setMigrationMessage(data.message);
+      await fetchStats(password);
+    } catch (error) {
+      setMigrationMessage(error instanceof Error ? error.message : "Migration failed");
+    } finally { setMigrating(false); }
+  };
+
   // ── Design tokens ───────────────────────────────────────────────
   const bg      = "#060d0c";
   const bgCard  = "#0d1a18";
@@ -444,12 +464,15 @@ export default function AdminPage() {
   const exportEmails = () => {
     if (!stats) return;
     const rows = [
-      ["#", "Email", "Role", "Business / Shop", "Subject", "Status", "Sent (WAT)"],
+      ["#", "Email", "Name", "Role", "Phone / WhatsApp", "Store / Company", "Type", "Subject", "Status", "Sent (WAT)"],
       ...stats.resendEmails.map((e, i) => [
         String(i + 1),
         e.recipient,
+        e.name || "",
         e.role ? e.role.charAt(0).toUpperCase() + e.role.slice(1) : "Unknown",
+        e.whatsapp || "",
         e.businessName || "",
+        e.kind === "team" ? "Team notification" : "User confirmation",
         e.subject,
         e.status,
         fmt(e.sentAt),
@@ -551,12 +574,14 @@ export default function AdminPage() {
         <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
           {lastRefresh && <span style={{ fontSize:11, color:textMut2 }}>Updated: {lastRefresh.toLocaleTimeString()}</span>}
           <button onClick={() => fetchStats(password)} disabled={loading} style={btnSecondary}>{loading ? "⏳" : "↻ Refresh"}</button>
+          <button onClick={migrateResend} disabled={migrating} style={{ ...btnSecondary, color:gold }}>{migrating ? "Importing…" : "Import Resend data"}</button>
           <button onClick={handleLogout} style={{ ...btnSecondary, background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", color:"#f87171" }}>Log Out</button>
         </div>
       </div>
 
       <div style={{ maxWidth:1120, margin:"0 auto", padding:"32px 20px 0" }}>
         {fetchErr && <p style={{ color:"#f87171", marginBottom:20, padding:"12px 16px", background:"rgba(239,68,68,0.1)", borderRadius:10, border:"1px solid rgba(239,68,68,0.2)" }}>⚠️ {fetchErr}</p>}
+        {migrationMessage && <p style={{ color: migrationMessage.includes("failed") ? "#f87171" : "#4ade80", marginBottom:20 }}>{migrationMessage}</p>}
 
         <h1 style={{ fontSize:24, fontWeight:900, marginBottom:4 }}>Waitlist Dashboard</h1>
         <p style={{ color:textMut, fontSize:13, marginBottom:28 }}>Real-time overview of all registered users and sent emails.</p>
@@ -604,6 +629,12 @@ export default function AdminPage() {
                     <p style={{ fontSize:11, color:textMut2, marginTop:8 }}>New signups are tracked locally and appear in the Registrations tab below.</p>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {stats.storageError && (
+              <div style={{ padding:"14px 18px", borderRadius:10, background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.25)", marginBottom:20, fontSize:13, color:"#f87171" }}>
+                ⚠️ Firebase storage is unavailable. Configure the Firebase server environment variables before accepting permanent waitlist records.
               </div>
             )}
 
@@ -739,7 +770,7 @@ export default function AdminPage() {
                     <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
                       <thead>
                         <tr style={{ borderBottom:`1px solid ${border}` }}>
-                          {["#","Email","Role","Business / Shop","Status","Sent (WAT)"].map(h => (
+                          {["#","Email","Name","Role","Phone / WhatsApp","Store / Company","Type","Status","Sent (WAT)"].map(h => (
                             <th key={h} style={{ padding:"11px 18px", textAlign:"left", color:textMut2, fontWeight:700, fontSize:11, letterSpacing:"0.08em", textTransform:"uppercase", whiteSpace:"nowrap" }}>{h}</th>
                           ))}
                         </tr>
@@ -749,8 +780,11 @@ export default function AdminPage() {
                           <tr key={i} style={{ borderBottom:i<filteredEmails.length-1?`1px solid ${border}`:"none", background:i%2===0?"transparent":"rgba(20,184,166,0.02)" }}>
                             <td style={{ padding:"12px 18px", color:textMut2, fontSize:11 }}>{i+1}</td>
                             <td style={{ padding:"12px 18px", fontFamily:"monospace", fontSize:12, fontWeight:600 }}>{e.recipient}</td>
+                            <td style={{ padding:"12px 18px", color:e.name?text:textMut2 }}>{e.name||"—"}</td>
                             <td style={{ padding:"12px 18px" }}>{e.role ? roleBadge(e.role) : <span style={{ color:textMut2, fontSize:12, fontStyle:"italic" }}>—</span>}</td>
+                            <td style={{ padding:"12px 18px", color:e.whatsapp?teal:textMut2 }}>{e.whatsapp||"—"}</td>
                             <td style={{ padding:"12px 18px", color:e.businessName?text:textMut2, fontStyle:e.businessName?"normal":"italic", fontSize:12 }}>{e.businessName||"—"}</td>
+                            <td style={{ padding:"12px 18px", color:textMut2, fontSize:12 }}>{e.kind === "team" ? "Team" : "User"}</td>
                             <td style={{ padding:"12px 18px" }}>{statusBadge(e.status)}</td>
                             <td style={{ padding:"12px 18px", color:textMut, whiteSpace:"nowrap", fontSize:12 }}>{fmt(e.sentAt)}</td>
                           </tr>

@@ -161,6 +161,7 @@ function Notice({
 export function WaitlistForm({ initialRole = "" }: { initialRole?: Role }) {
   const [role, setRole] = useState<Role>(initialRole);
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [wa, setWa] = useState("");
   const [biz, setBiz] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -171,6 +172,7 @@ export function WaitlistForm({ initialRole = "" }: { initialRole?: Role }) {
     e.preventDefault();
     if (!role) return setErr("Please select your role — Buyer, Vendor, or Rider.");
     if (!email.includes("@")) return setErr("Please enter a valid email.");
+    if (!name.trim()) return setErr("Please enter your name.");
     if (!wa.trim() || wa.trim().length < 7)
       return setErr("Please enter your WhatsApp number — it's required for launch updates.");
     if (role === "vendor" && !biz.trim())
@@ -186,6 +188,7 @@ export function WaitlistForm({ initialRole = "" }: { initialRole?: Role }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email.toLowerCase(),
+          name: name.trim(),
           whatsapp: wa,
           role,
           businessName: role === "vendor" || role === "rider" ? biz : undefined,
@@ -199,6 +202,7 @@ export function WaitlistForm({ initialRole = "" }: { initialRole?: Role }) {
       }
       setStatus("success");
       setEmail("");
+      setName("");
       setWa("");
       setRole("");
       setBiz("");
@@ -265,6 +269,15 @@ export function WaitlistForm({ initialRole = "" }: { initialRole?: Role }) {
       />
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <Field
+          type="text"
+          placeholder="Full name *"
+          autoComplete="name"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          style={{ flex: 1, minWidth: 190, width: "auto" }}
+        />
         <Field
           type="email"
           placeholder="Email address *"
