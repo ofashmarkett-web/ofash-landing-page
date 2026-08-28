@@ -136,7 +136,7 @@ export async function GET(req: NextRequest) {
 
   // ── Legacy fallback: role map from old team notification emails ──────
   // Used only for historical signups sent before the subject-encoding change.
-  const legacyRoleMap = new Map<string, { role: string; businessName?: string; whatsapp?: string }>();
+  const legacyRoleMap = new Map<string, { role: string; name?: string; businessName?: string; whatsapp?: string }>();
   for (const e of teamRows) {
     const email  = parseNotifEmail(e.subject ?? "");
     const parsed = email ? parseParens(e.subject ?? "") : null;

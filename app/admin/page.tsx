@@ -634,7 +634,7 @@ export default function AdminPage() {
 
             {stats.storageError && (
               <div style={{ padding:"14px 18px", borderRadius:10, background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.25)", marginBottom:20, fontSize:13, color:"#f87171" }}>
-                ⚠️ Firebase storage is unavailable. Configure the Firebase server environment variables before accepting permanent waitlist records.
+                ⚠️ Firestore is unavailable. Configure the Firebase Admin environment variables and enable Cloud Firestore before accepting permanent waitlist records.
               </div>
             )}
 
@@ -690,6 +690,9 @@ export default function AdminPage() {
                   </div>
                   <button onClick={exportRegistrations} style={{ ...btnSecondary, background:"rgba(74,222,128,0.08)", border:"1px solid rgba(74,222,128,0.22)", color:"#4ade80" }}>
                     ↓ Export CSV
+                  </button>
+                  <button onClick={migrateResend} disabled={migrating} style={{ ...btnSecondary, background:"rgba(245,158,11,0.1)", border:"1px solid rgba(245,158,11,0.3)", color:gold }}>
+                    {migrating ? "Importing…" : "↥ Import Resend"}
                   </button>
                 </div>
 
